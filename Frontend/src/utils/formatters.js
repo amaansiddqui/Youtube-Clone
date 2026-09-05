@@ -50,3 +50,16 @@ export function getSafeThumbnail(url, index = 0) {
   }
   return url;
 }
+
+export const DEFAULT_FALLBACK_BANNERS = [
+  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80',
+  'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80',
+  'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1600&q=80'
+];
+
+export function getSafeBanner(url, index = 0) {
+  if (!url || url.includes('example.com')) {
+    return DEFAULT_FALLBACK_BANNERS[index % DEFAULT_FALLBACK_BANNERS.length];
+  }
+  return url;
+}

@@ -1,6 +1,6 @@
 import VideoCard from './VideoCard';
 
-export default function VideoGrid({ videos, onResetFilter }) {
+export default function VideoGrid({ videos, onResetFilter, onSelectVideo, onNavigateChannel }) {
   if (!videos || videos.length === 0) {
     return (
       <div className="yt-empty-grid flex flex-col items-center justify-center py-20 px-4 text-center">
@@ -19,7 +19,13 @@ export default function VideoGrid({ videos, onResetFilter }) {
   return (
     <div className="yt-video-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6">
       {videos.map((video, idx) => (
-        <VideoCard key={video.videoId || idx} video={video} index={idx} />
+        <VideoCard
+          key={video.videoId || idx}
+          video={video}
+          index={idx}
+          onSelectVideo={onSelectVideo}
+          onNavigateChannel={onNavigateChannel}
+        />
       ))}
     </div>
   );

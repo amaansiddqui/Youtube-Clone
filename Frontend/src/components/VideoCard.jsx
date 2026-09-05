@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { formatViews, formatTimeAgo, getSafeThumbnail } from '../utils/formatters';
 import { VerifiedIcon, MoreVerticalIcon } from './Icons';
 
-export default function VideoCard({ video, index = 0 }) {
+export default function VideoCard({ video, index = 0, onSelectVideo, onNavigateChannel }) {
   const [imgError, setImgError] = useState(false);
 
   const initialThumb = getSafeThumbnail(video.thumbnailUrl, index);
@@ -23,8 +23,28 @@ export default function VideoCard({ video, index = 0 }) {
   // Generate channel initial letter for fallback avatar
   const channelLetter = channelTitle.charAt(0).toUpperCase();
 
+  const handleClick = () => {
+    if (onSelectVideo) {
+      onSelectVideo(video.videoId);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
-    <div className="yt-video-card flex flex-col cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-[#3ea6ff] rounded-xl" tabIndex={0}>
+    <div
+      className="yt-video-card flex flex-col cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-[#3ea6ff] rounded-xl transition-transform duration-200"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="link"
+      aria-label={`Watch ${video.title}`}
+    >
       {/* Thumbnail container */}
       <div className="yt-thumbnail-wrapper relative w-full aspect-video rounded-xl overflow-hidden bg-[#272727]">
         <img
@@ -41,7 +61,16 @@ export default function VideoCard({ video, index = 0 }) {
 
       {/* Video metadata container */}
       <div className="yt-card-details flex gap-3 mt-3 items-start">
-        <div className="yt-card-avatar-wrapper shrink-0 w-9 h-9 rounded-full overflow-hidden bg-[#333]">
+        <div
+          className="yt-card-avatar-wrapper shrink-0 w-9 h-9 rounded-full overflow-hidden bg-[#333] cursor-pointer hover:opacity-85 transition-opacity"
+          onClick={(e) => {
+            if (onNavigateChannel && video.channelId) {
+              e.stopPropagation();
+              onNavigateChannel(video.channelId);
+            }
+          }}
+          title={channelTitle}
+        >
           {video.avatarUrl ? (
             <img
               src={video.avatarUrl}
@@ -64,7 +93,16 @@ export default function VideoCard({ video, index = 0 }) {
           </h3>
 
           <div className="yt-card-channel-row flex items-center gap-1 mb-0.5">
-            <span className="yt-card-channel-name text-[#aaa] hover:text-white text-[13px] truncate" title={channelTitle}>
+            <span
+              className="yt-card-channel-name text-[#aaa] hover:text-white text-[13px] truncate cursor-pointer"
+              title={channelTitle}
+              onClick={(e) => {
+                if (onNavigateChannel && video.channelId) {
+                  e.stopPropagation();
+                  onNavigateChannel(video.channelId);
+                }
+              }}
+            >
               {channelTitle}
             </span>
             <VerifiedIcon size={14} className="yt-verified-badge shrink-0" />

@@ -10,10 +10,18 @@ import {
   TrendingIcon,
   MusicIcon,
   GamingIcon,
-  SettingsIcon
+  SettingsIcon,
+  UserCircleIcon
 } from './Icons';
 
-export default function Sidebar({ isOpen, activeTab = 'Home', onSelectTab }) {
+export default function Sidebar({
+  isOpen,
+  activeTab = 'Home',
+  onSelectTab,
+  userChannelId,
+  onNavigateChannel,
+  onOpenCreateChannel
+}) {
   const [currentTab, setCurrentTab] = useState(activeTab);
 
   const handleItemClick = (title) => {
@@ -105,6 +113,31 @@ export default function Sidebar({ isOpen, activeTab = 'Home', onSelectTab }) {
 
       <div className="yt-sidebar-section flex flex-col gap-0.5">
         <div className="yt-sidebar-section-title text-sm font-semibold text-white px-3 py-1.5">You ›</div>
+        {userChannelId ? (
+          <button
+            className="yt-sidebar-item flex items-center gap-6 w-full px-3 py-2.5 rounded-xl text-left text-sm cursor-pointer transition-colors text-white hover:bg-white/10"
+            onClick={() => {
+              if (onNavigateChannel) onNavigateChannel(userChannelId);
+            }}
+          >
+            <span className="yt-sidebar-icon flex items-center justify-center w-6 h-6">
+              <UserCircleIcon size={22} />
+            </span>
+            <span className="yt-sidebar-text truncate">Your channel</span>
+          </button>
+        ) : (
+          onOpenCreateChannel && (
+            <button
+              className="yt-sidebar-item flex items-center gap-6 w-full px-3 py-2.5 rounded-xl text-left text-sm cursor-pointer transition-colors text-white hover:bg-white/10"
+              onClick={onOpenCreateChannel}
+            >
+              <span className="yt-sidebar-icon flex items-center justify-center w-6 h-6">
+                <UserCircleIcon size={22} />
+              </span>
+              <span className="yt-sidebar-text truncate">Create a channel</span>
+            </button>
+          )
+        )}
         {libraryItems.map((item) => {
           const IconComp = item.icon;
           const isActive = currentTab === item.title;

@@ -9,28 +9,27 @@ export default function Header({
   currentUser = null,
   onNavigateSignIn,
   onNavigateHome,
-  onLogout
+  onLogout,
+  onNavigateChannel,
+  onOpenCreateChannel,
+  userChannelId = null
 }) {
-  const [localSearch, setLocalSearch] = useState(searchQuery);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (onSearchSubmit) {
-      onSearchSubmit(localSearch);
+      onSearchSubmit(searchQuery);
     }
   };
 
   const handleInputChange = (e) => {
-    const val = e.target.value;
-    setLocalSearch(val);
     if (onSearchChange) {
-      onSearchChange(val);
+      onSearchChange(e.target.value);
     }
   };
 
   const clearSearch = () => {
-    setLocalSearch('');
     if (onSearchChange) {
       onSearchChange('');
     }
@@ -41,7 +40,7 @@ export default function Header({
 
   return (
     <header className="yt-header sticky top-0 z-50 h-14 bg-[#0f0f0f] flex items-center justify-between px-4 border-b border-white/10 select-none">
-      {/* Left section: Hamburger & Logo */}
+      {/* Left section: Hamburger & Logo  */}
       <div className="yt-header-left flex items-center gap-4 min-w-[170px]">
         <button
           className="yt-icon-btn yt-hamburger-btn w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors cursor-pointer"
@@ -64,12 +63,12 @@ export default function Header({
             <input
               type="text"
               placeholder="Search"
-              value={localSearch}
+              value={searchQuery}
               onChange={handleInputChange}
               className="yt-search-input w-full bg-transparent border-none outline-none text-white text-base placeholder-[#717171]"
               aria-label="Search"
             />
-            {localSearch && (
+            {searchQuery && (
               <button
                 type="button"
                 className="yt-search-clear-btn text-[#aaa] hover:text-white text-xl p-1 cursor-pointer"
@@ -99,7 +98,13 @@ export default function Header({
       <div className="yt-header-right flex items-center gap-2 min-w-[170px] justify-end">
         {currentUser ? (
           <>
-            <button className="yt-create-btn flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white px-3.5 h-9 rounded-full text-sm font-medium transition-colors cursor-pointer" title="Create">
+            <button
+              onClick={() => {
+                if (onOpenCreateChannel) onOpenCreateChannel();
+              }}
+              className="yt-create-btn flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white px-3.5 h-9 rounded-full text-sm font-medium transition-colors cursor-pointer"
+              title="Create a channel or video"
+            >
               <CreateIcon size={20} />
               <span className="yt-create-text hidden sm:inline">Create</span>
             </button>
@@ -144,6 +149,33 @@ export default function Header({
                     <p className="yt-dropdown-email text-xs text-[#aaa] break-all">{currentUser.email}</p>
                   </div>
                   <hr className="yt-dropdown-divider border-t border-white/10 my-1.5" />
+
+                  {/* Channel options */}
+                  {userChannelId && (
+                    <button
+                      className="yt-dropdown-item w-full text-left px-4 py-2 hover:bg-white/10 text-white text-sm cursor-pointer transition-colors flex items-center gap-2.5"
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        if (onNavigateChannel) onNavigateChannel(userChannelId);
+                      }}
+                    >
+                      <span>📺</span>
+                      <span>Your channel</span>
+                    </button>
+                  )}
+
+                  <button
+                    className="yt-dropdown-item w-full text-left px-4 py-2 hover:bg-white/10 text-white text-sm cursor-pointer transition-colors flex items-center gap-2.5"
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      if (onOpenCreateChannel) onOpenCreateChannel();
+                    }}
+                  >
+                    <span>➕</span>
+                    <span>Create a channel</span>
+                  </button>
+
+                  <hr className="yt-dropdown-divider border-t border-white/10 my-1.5" />
                   <button
                     className="yt-dropdown-item logout w-full text-left px-4 py-2 hover:bg-white/10 text-[#ff6b6b] text-sm cursor-pointer transition-colors"
                     onClick={() => {
@@ -158,14 +190,26 @@ export default function Header({
             </div>
           </>
         ) : (
-          <button
-            className="yt-signin-btn flex items-center gap-2 border border-white/20 hover:bg-[#3ea6ff]/10 hover:border-transparent text-[#3ea6ff] px-3.5 h-9 rounded-full text-sm font-medium transition-all cursor-pointer whitespace-nowrap"
-            onClick={onNavigateSignIn}
-            aria-label="Sign in"
-          >
-            <UserCircleIcon size={22} className="yt-signin-icon text-[#3ea6ff]" />
-            <span className="yt-signin-text text-[#3ea6ff] font-medium">Sign in</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (onOpenCreateChannel) onOpenCreateChannel();
+              }}
+              className="yt-create-btn flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white px-3.5 h-9 rounded-full text-sm font-medium transition-colors cursor-pointer"
+              title="Create a channel or video"
+            >
+              <CreateIcon size={20} />
+              <span className="yt-create-text hidden sm:inline">Create</span>
+            </button>
+            <button
+              className="yt-signin-btn flex items-center gap-2 border border-white/20 hover:bg-[#3ea6ff]/10 hover:border-transparent text-[#3ea6ff] px-3.5 h-9 rounded-full text-sm font-medium transition-all cursor-pointer whitespace-nowrap"
+              onClick={onNavigateSignIn}
+              aria-label="Sign in"
+            >
+              <UserCircleIcon size={22} className="yt-signin-icon text-[#3ea6ff]" />
+              <span className="yt-signin-text text-[#3ea6ff] font-medium">Sign in</span>
+            </button>
+          </div>
         )}
       </div>
     </header>
