@@ -1,6 +1,13 @@
+/**
+ * Video Grid Component
+ * Renders the responsive CSS grid layout of VideoCard components.
+ * Displays a friendly empty state with a reset filter button when no videos match.
+ */
+
 import VideoCard from './VideoCard';
 
 export default function VideoGrid({ videos, onResetFilter, onSelectVideo, onNavigateChannel }) {
+
   if (!videos || videos.length === 0) {
     return (
       <div className="yt-empty-grid flex flex-col items-center justify-center py-20 px-4 text-center">

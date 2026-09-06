@@ -1,6 +1,22 @@
+/**
+ * Video Watch Page
+ * Full YouTube viewing page layout:
+ * - HTML5 / responsive custom VideoPlayer
+ * - Title, creator identity badge, and Subscribe button
+ * - Combined Like / Dislike reaction pill
+ * - Share button with link-copied feedback
+ * - Expandable video description box
+ * - CommentSection with full CRUD operations
+ * - Recommended videos sidebar
+ */
+
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import VideoPlayer from './VideoPlayer';
+
 import CommentSection from './CommentSection';
+import { toggleLikeThunk, toggleDislikeThunk } from '../store/slices/videoSlice';
+import { toggleSubscribeThunk } from '../store/slices/channelSlice';
 import {
   ThumbUpIcon,
   ThumbDownIcon,
@@ -28,6 +44,7 @@ export default function VideoWatchPage({
   onNavigateHome,
   onNavigateChannel
 }) {
+  const dispatch = useDispatch();
   const [video, setVideo] = useState(() => getVideoById(videoId));
   const [userStatus, setUserStatus] = useState(() => getUserVideoInteraction(videoId));
   const [isSubscribed, setIsSubscribed] = useState(() => {
@@ -67,6 +84,7 @@ export default function VideoWatchPage({
     if (result) {
       setVideo(result.video);
       setUserStatus(result.userStatus);
+      dispatch(toggleLikeThunk(video.videoId));
     }
   };
 
@@ -77,6 +95,7 @@ export default function VideoWatchPage({
     if (result) {
       setVideo(result.video);
       setUserStatus(result.userStatus);
+      dispatch(toggleDislikeThunk(video.videoId));
     }
   };
 
@@ -85,6 +104,7 @@ export default function VideoWatchPage({
     if (!video?.channelId) return;
     const newState = toggleChannelSubscription(video.channelId);
     setIsSubscribed(newState);
+    dispatch(toggleSubscribeThunk(video.channelId));
   };
 
   // Handle Share link copy

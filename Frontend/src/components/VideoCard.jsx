@@ -1,3 +1,14 @@
+/**
+ * Video Card Component
+ * Renders individual video previews in feeds and search results.
+ * Features:
+ * - 16:9 responsive thumbnail with duration badge
+ * - Fallback image handling on network error
+ * - Channel avatar with direct click to channel page
+ * - Title, formatted view count, and relative time
+ * - Full keyboard accessibility (Enter/Space to watch)
+ */
+
 import { useState } from 'react';
 import { formatViews, formatTimeAgo, getSafeThumbnail } from '../utils/formatters';
 import { VerifiedIcon, MoreVerticalIcon } from './Icons';
@@ -5,6 +16,7 @@ import { VerifiedIcon, MoreVerticalIcon } from './Icons';
 export default function VideoCard({ video, index = 0, onSelectVideo, onNavigateChannel }) {
   const [imgError, setImgError] = useState(false);
 
+  // Fallback to high-quality placeholder thumbnail if URL is broken
   const initialThumb = getSafeThumbnail(video.thumbnailUrl, index);
   const [currentThumb, setCurrentThumb] = useState(initialThumb);
 
@@ -14,6 +26,7 @@ export default function VideoCard({ video, index = 0, onSelectVideo, onNavigateC
       setCurrentThumb('https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80');
     }
   };
+
 
   const channelTitle = video.channelName || video.uploader || 'YouTube Creator';
   const timeAgo = formatTimeAgo(video.uploadDate);

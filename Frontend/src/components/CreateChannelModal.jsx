@@ -1,5 +1,14 @@
+/**
+ * Create Channel Modal
+ * Allows an authenticated creator to initialize their official YouTube channel
+ * by specifying name, description, and banner artwork.
+ */
+
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { createChannel } from '../utils/channelService';
+import { createChannelThunk } from '../store/slices/channelSlice';
+
 
 export default function CreateChannelModal({
   isOpen,
@@ -8,6 +17,7 @@ export default function CreateChannelModal({
   onNavigateSignIn,
   onChannelCreated
 }) {
+  const dispatch = useDispatch();
   const [channelName, setChannelName] = useState('');
   const [description, setDescription] = useState('');
   const [bannerUrl, setBannerUrl] = useState(
@@ -35,13 +45,15 @@ export default function CreateChannelModal({
 
     setIsSubmitting(true);
     try {
-      const newChannel = createChannel({
+      const channelData = {
         channelName: channelName.trim(),
         description: description.trim(),
         channelBanner: bannerUrl.trim(),
         avatarUrl: avatarUrl.trim() || currentUser.avatar,
         currentUser
-      });
+      };
+      const newChannel = createChannel(channelData);
+      dispatch(createChannelThunk(channelData));
 
       setIsSubmitting(false);
       onClose();

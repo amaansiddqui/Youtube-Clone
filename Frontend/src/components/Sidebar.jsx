@@ -1,3 +1,10 @@
+/**
+ * Main Navigation Sidebar
+ * Renders in two states:
+ * 1. Compact Mini-Sidebar (72px): When drawer is toggled closed, showing essential icons & labels
+ * 2. Full Expanded Sidebar (240px): Full drawer with primary, library, and explore sections
+ */
+
 import { useState } from 'react';
 import {
   HomeIcon,
@@ -30,6 +37,7 @@ export default function Sidebar({
       onSelectTab(title);
     }
   };
+
 
   const primaryItems = [
     { title: 'Home', icon: HomeIcon },

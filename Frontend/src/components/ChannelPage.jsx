@@ -1,14 +1,29 @@
+/**
+ * Creator Channel Page
+ * Displays full channel profile:
+ * - Wide banner image and circular avatar
+ * - Channel handle, subscriber counter, and video count
+ * - Owner action buttons ('Customize channel', 'Manage videos', 'Upload video')
+ * - Viewer action button ('Subscribe' / 'Subscribed')
+ * - Videos tab and About tab
+ * - Integrated modals for editing, uploading, and managing videos
+ */
+
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   getChannelById,
   getChannelVideos
 } from '../utils/channelService';
+
 import {
   deleteVideo,
   addVideo,
   getChannelSubscription,
   toggleChannelSubscription
 } from '../utils/videoService';
+import { deleteVideoThunk, addVideoThunk } from '../store/slices/videoSlice';
+import { toggleSubscribeThunk } from '../store/slices/channelSlice';
 import { formatViews, formatTimeAgo, getSafeThumbnail, getSafeBanner } from '../utils/formatters';
 import { VerifiedIcon, CheckIcon, EditIcon, TrashIcon, CreateIcon } from './Icons';
 import EditVideoModal from './EditVideoModal';
@@ -22,6 +37,7 @@ export default function ChannelPage({
   onNavigateHome,
   onOpenCreateChannel
 }) {
+  const dispatch = useDispatch();
   const [channel, setChannel] = useState(() => getChannelById(channelId));
   const [videos, setVideos] = useState(() => getChannelVideos(channelId));
   const [activeTab, setActiveTab] = useState('Videos'); // 'Videos' | 'About'
@@ -95,6 +111,7 @@ export default function ChannelPage({
   const handleToggleSubscribe = () => {
     const newState = toggleChannelSubscription(channel.channelId);
     setIsSubscribed(newState);
+    dispatch(toggleSubscribeThunk(channel.channelId));
   };
 
   // Copy channel link
@@ -116,6 +133,7 @@ export default function ChannelPage({
     if (window.confirm(`Permanently delete "${video.title}"? This cannot be undone.`)) {
       try {
         deleteVideo(video.videoId);
+        dispatch(deleteVideoThunk(video.videoId));
         setVideos(getChannelVideos(channel.channelId));
       } catch (err) {
         console.error('Failed to delete video:', err);
@@ -129,7 +147,7 @@ export default function ChannelPage({
     if (!uploadTitle.trim()) return;
 
     try {
-      addVideo({
+      const vidData = {
         title: uploadTitle.trim(),
         description: uploadDesc.trim(),
         category: uploadCategory,
@@ -139,7 +157,9 @@ export default function ChannelPage({
         channelName: channel.channelName,
         uploader: channel.channelName,
         avatarUrl: channel.avatarUrl
-      });
+      };
+      addVideo(vidData);
+      dispatch(addVideoThunk(vidData));
 
       setUploadTitle('');
       setUploadDesc('');

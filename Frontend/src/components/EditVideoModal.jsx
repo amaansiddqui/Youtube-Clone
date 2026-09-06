@@ -1,5 +1,14 @@
+/**
+ * Edit Video Modal
+ * Allows channel owners to modify an existing video's title, description,
+ * topic category, and custom thumbnail image.
+ */
+
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { updateVideo } from '../utils/videoService';
+
+import { updateVideoThunk } from '../store/slices/videoSlice';
 
 const CATEGORIES = [
   'All',
@@ -21,6 +30,7 @@ export default function EditVideoModal({
   onClose,
   onVideoUpdated
 }) {
+  const dispatch = useDispatch();
   const [title, setTitle] = useState(video?.title || '');
   const [description, setDescription] = useState(video?.description || '');
   const [category, setCategory] = useState(video?.category || 'React');
@@ -42,13 +52,15 @@ export default function EditVideoModal({
 
     setIsSubmitting(true);
     try {
-      const updated = updateVideo(video.videoId, {
+      const fields = {
         title: title.trim(),
         description: description.trim(),
         category,
         thumbnailUrl: thumbnailUrl.trim() || video.thumbnailUrl,
         duration: duration.trim() || video.duration
-      });
+      };
+      const updated = updateVideo(video.videoId, fields);
+      dispatch(updateVideoThunk({ videoId: video.videoId, fields }));
 
       setIsSubmitting(false);
       onClose();

@@ -115,6 +115,18 @@ export function getChannels() {
       localStorage.setItem(STORAGE_CHANNELS_KEY, JSON.stringify(initialChannels));
       return initialChannels;
     }
+
+    // Prune removed seed channels (channel04-channel08), keeping initialChannels and user-created channels
+    const validSeedIds = new Set(initialChannels.map((c) => c.channelId));
+    const prunedChannels = parsed.filter(
+      (c) => validSeedIds.has(c.channelId) || (c.channelId && c.channelId.startsWith('channel_'))
+    );
+
+    if (prunedChannels.length !== parsed.length) {
+      localStorage.setItem(STORAGE_CHANNELS_KEY, JSON.stringify(prunedChannels));
+      return prunedChannels;
+    }
+
     return parsed;
   } catch (err) {
     console.error('Error reading channels from storage:', err);

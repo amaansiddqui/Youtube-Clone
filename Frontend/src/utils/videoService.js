@@ -27,6 +27,46 @@ export function getVideos() {
       localStorage.setItem(STORAGE_VIDEOS_KEY, JSON.stringify(allVideos));
       return allVideos;
     }
+
+    // Prune removed moreVideos (e.g. video04-video16), keeping only core initialVideos and user uploads
+    const validSeedIds = new Set(allVideos.map((v) => v.videoId));
+    const prunedVideos = parsed.filter(
+      (v) => validSeedIds.has(v.videoId) || (v.videoId && v.videoId.startsWith('video_'))
+    );
+
+    let cacheUpdated = prunedVideos.length !== parsed.length;
+
+    // Auto-heal legacy cache: if stored entries contain unplayable media.w3.org URLs,
+    // seamlessly update them with the verified playable URLs from allVideos.
+    const freshUrlMap = new Map(allVideos.map((v) => [v.videoId, v.videoUrl]));
+    const healedVideos = prunedVideos.map((v) => {
+      if (v.videoUrl && v.videoUrl.includes('media.w3.org') && freshUrlMap.has(v.videoId)) {
+        cacheUpdated = true;
+        return { ...v, videoUrl: freshUrlMap.get(v.videoId) };
+      }
+      return v;
+    });
+
+    // Auto-sync video01 sample data if title is outdated
+    const v1 = allVideos.find((v) => v.videoId === 'video01');
+    const existingV1 = healedVideos.find((v) => v.videoId === 'video01');
+    if (v1 && existingV1 && existingV1.title !== v1.title) {
+      existingV1.title = v1.title;
+      existingV1.thumbnailUrl = v1.thumbnailUrl;
+      existingV1.description = v1.description;
+      existingV1.uploader = v1.uploader;
+      existingV1.views = v1.views;
+      existingV1.likes = v1.likes;
+      existingV1.dislikes = v1.dislikes;
+      existingV1.comments = v1.comments;
+      cacheUpdated = true;
+    }
+
+    if (cacheUpdated) {
+      localStorage.setItem(STORAGE_VIDEOS_KEY, JSON.stringify(healedVideos));
+      return healedVideos;
+    }
+
     return parsed;
   } catch (err) {
     console.error('Error reading videos from storage:', err);
@@ -180,7 +220,50 @@ export function getUserVideoInteraction(videoId) {
 }
 
 /**
- * Toggle like for a video and update count in database
+ * Helper: Computes updated reaction counts and state following YouTube's interaction model.
+ */
+function computeUpdatedReactions(currentLikes, currentDislikes, currentStatus, action) {
+  let likes = Math.max(0, Number(currentLikes) || 0);
+  let dislikes = Math.max(0, Number(currentDislikes) || 0);
+  let newStatus = null;
+
+  if (action === 'like') {
+    if (currentStatus === 'like') {
+      // Toggle off active like
+      likes = Math.max(0, likes - 1);
+      newStatus = null;
+    } else if (currentStatus === 'dislike') {
+      // Switch from dislike to like
+      dislikes = Math.max(0, dislikes - 1);
+      likes += 1;
+      newStatus = 'like';
+    } else {
+      // New like from neutral
+      likes += 1;
+      newStatus = 'like';
+    }
+  } else if (action === 'dislike') {
+    if (currentStatus === 'dislike') {
+      // Toggle off active dislike
+      dislikes = Math.max(0, dislikes - 1);
+      newStatus = null;
+    } else if (currentStatus === 'like') {
+      // Switch from like to dislike
+      likes = Math.max(0, likes - 1);
+      dislikes += 1;
+      newStatus = 'dislike';
+    } else {
+      // New dislike from neutral
+      dislikes += 1;
+      newStatus = 'dislike';
+    }
+  }
+
+  return { likes, dislikes, newStatus };
+}
+
+/**
+ * Toggle like for a video and update counts in local database.
  */
 export function toggleVideoLike(videoId) {
   const videos = getVideos();
@@ -191,24 +274,12 @@ export function toggleVideoLike(videoId) {
   const interactions = getInteractionsMap();
   const currentStatus = interactions[videoId] || null;
 
-  let likes = Number(targetVideo.likes) || 0;
-  let dislikes = Number(targetVideo.dislikes) || 0;
-  let newStatus;
-
-  if (currentStatus === 'like') {
-    // Remove like
-    likes = Math.max(0, likes - 1);
-    newStatus = null;
-  } else if (currentStatus === 'dislike') {
-    // Switch from dislike to like
-    dislikes = Math.max(0, dislikes - 1);
-    likes = likes + 1;
-    newStatus = 'like';
-  } else {
-    // New like
-    likes = likes + 1;
-    newStatus = 'like';
-  }
+  const { likes, dislikes, newStatus } = computeUpdatedReactions(
+    targetVideo.likes,
+    targetVideo.dislikes,
+    currentStatus,
+    'like'
+  );
 
   targetVideo.likes = likes;
   targetVideo.dislikes = dislikes;
@@ -228,7 +299,7 @@ export function toggleVideoLike(videoId) {
 }
 
 /**
- * Toggle dislike for a video and update count in database
+ * Toggle dislike for a video and update counts in local database.
  */
 export function toggleVideoDislike(videoId) {
   const videos = getVideos();
@@ -239,24 +310,12 @@ export function toggleVideoDislike(videoId) {
   const interactions = getInteractionsMap();
   const currentStatus = interactions[videoId] || null;
 
-  let likes = Number(targetVideo.likes) || 0;
-  let dislikes = Number(targetVideo.dislikes) || 0;
-  let newStatus;
-
-  if (currentStatus === 'dislike') {
-    // Remove dislike
-    dislikes = Math.max(0, dislikes - 1);
-    newStatus = null;
-  } else if (currentStatus === 'like') {
-    // Switch from like to dislike
-    likes = Math.max(0, likes - 1);
-    dislikes = dislikes + 1;
-    newStatus = 'dislike';
-  } else {
-    // New dislike
-    dislikes = dislikes + 1;
-    newStatus = 'dislike';
-  }
+  const { likes, dislikes, newStatus } = computeUpdatedReactions(
+    targetVideo.likes,
+    targetVideo.dislikes,
+    currentStatus,
+    'dislike'
+  );
 
   targetVideo.likes = likes;
   targetVideo.dislikes = dislikes;
@@ -288,17 +347,37 @@ export function getChannelSubscription(channelId) {
   }
 }
 
+/**
+ * Toggles subscription status and updates channel subscriber count accordingly.
+ */
 export function toggleChannelSubscription(channelId) {
   try {
     const raw = localStorage.getItem(STORAGE_SUBSCRIPTIONS_KEY);
     const map = raw ? JSON.parse(raw) : {};
     const newState = !map[channelId];
+
     if (newState) {
       map[channelId] = true;
     } else {
       delete map[channelId];
     }
     localStorage.setItem(STORAGE_SUBSCRIPTIONS_KEY, JSON.stringify(map));
+
+    // Also update subscriber counter in the local channels cache
+    try {
+      const rawChannels = localStorage.getItem('yt_channels_database_v2');
+      if (rawChannels) {
+        const channels = JSON.parse(rawChannels);
+        const channel = channels.find((c) => c.channelId === channelId);
+        if (channel) {
+          channel.subscribers = Math.max(0, (channel.subscribers || 0) + (newState ? 1 : -1));
+          localStorage.setItem('yt_channels_database_v2', JSON.stringify(channels));
+        }
+      }
+    } catch (chanErr) {
+      console.error('Failed to update subscriber count in channel:', chanErr);
+    }
+
     return newState;
   } catch {
     return false;

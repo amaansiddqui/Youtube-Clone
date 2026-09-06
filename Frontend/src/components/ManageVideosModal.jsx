@@ -1,7 +1,19 @@
+/**
+ * Manage Videos Modal (YouTube Studio style)
+ * Provides a management dashboard for creator channels:
+ * - List all uploaded videos with metrics (views, duration, comments)
+ * - Search within channel videos
+ * - Quick actions: Watch, Edit details, Delete video
+ * - Direct trigger for uploading new videos
+ */
+
 import { useState, useMemo } from 'react';
+import { useDispatch } from 'react-redux';
 import { formatViews, formatTimeAgo, getSafeThumbnail } from '../utils/formatters';
+
 import { EditIcon, TrashIcon, SearchIcon, PlayIcon } from './Icons';
 import { deleteVideo } from '../utils/videoService';
+import { deleteVideoThunk } from '../store/slices/videoSlice';
 
 export default function ManageVideosModal({
   isOpen,
@@ -13,6 +25,7 @@ export default function ManageVideosModal({
   onOpenUpload,
   onVideoListChanged
 }) {
+  const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredVideos = useMemo(() => {
@@ -31,6 +44,7 @@ export default function ManageVideosModal({
     if (window.confirm(`Permanently delete "${video.title}"? This cannot be undone.`)) {
       try {
         deleteVideo(video.videoId);
+        dispatch(deleteVideoThunk(video.videoId));
         if (onVideoListChanged) onVideoListChanged();
       } catch (err) {
         console.error('Failed to delete video:', err);
@@ -41,7 +55,7 @@ export default function ManageVideosModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xs select-none">
       <div
-        className="w-full max-w-4xl bg-[#212121] text-white rounded-2x5 border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-4xl bg-[#212121] text-white rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150"
         role="dialog"
         aria-modal="true"
         aria-labelledby="manage-videos-title"

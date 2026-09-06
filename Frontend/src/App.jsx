@@ -1,5 +1,16 @@
-import { useState, useMemo, useEffect } from 'react';
+/**
+ * Main Application Component (YouTube Clone)
+ * Orchestrates:
+ * - Client-side history-based routing (/watch?v=..., /channel?id=..., /login, /)
+ * - Redux state hydration & background event listeners for real-time updates
+ * - View switching between Home feed, Video watch view, Channel profile, and Auth page
+ * - Global Header, collapsible Sidebar, and floating modals
+ */
+
+import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import Header from './components/Header';
+
 import Sidebar from './components/Sidebar';
 import FilterBar from './components/FilterBar';
 import VideoGrid from './components/VideoGrid';
@@ -7,9 +18,33 @@ import VideoWatchPage from './components/VideoWatchPage';
 import ChannelPage from './components/ChannelPage';
 import CreateChannelModal from './components/CreateChannelModal';
 import AuthPage from './components/AuthPage';
-import { getCurrentUser, logoutUser } from './utils/auth';
-import { getVideos } from './utils/videoService';
-import { getUserPrimaryChannel } from './utils/channelService';
+
+import { selectCurrentUser, setUser, logout } from './store/slices/authSlice';
+import {
+  selectFilteredVideos,
+  selectSelectedCategory,
+  selectSearchQuery,
+  setSelectedCategory,
+  setSearchQuery,
+  fetchVideosThunk
+} from './store/slices/videoSlice';
+import {
+  selectUserPrimaryChannel,
+  fetchChannelsThunk
+} from './store/slices/channelSlice';
+import {
+  selectIsSidebarOpen,
+  selectIsWatchSidebarOpen,
+  selectActiveTab,
+  selectIsCreateChannelModalOpen,
+  toggleSidebar,
+  setSidebarOpen,
+  toggleWatchSidebar,
+  setWatchSidebarOpen,
+  setActiveTab,
+  setCreateChannelModalOpen
+} from './store/slices/uiSlice';
+
 import './App.css';
 
 // Helper to extract video ID from pathname or search params
@@ -39,17 +74,22 @@ function extractChannelId(path, search) {
 }
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
+  const dispatch = useDispatch();
+
+  // Redux state selectors
+  const currentUser = useSelector(selectCurrentUser);
+  const isSidebarOpen = useSelector(selectIsSidebarOpen);
+  const isWatchSidebarOpen = useSelector(selectIsWatchSidebarOpen);
+  const activeTab = useSelector(selectActiveTab);
+  const isCreateChannelModalOpen = useSelector(selectIsCreateChannelModalOpen);
+  const selectedCategory = useSelector(selectSelectedCategory);
+  const searchQuery = useSelector(selectSearchQuery);
+  const filteredVideos = useSelector(selectFilteredVideos);
+  const userPrimaryChannel = useSelector(selectUserPrimaryChannel(currentUser?.userId));
+
+  // Local routing state
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname || '/');
   const [currentSearch, setCurrentSearch] = useState(() => window.location.search || '');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isWatchSidebarOpen, setIsWatchSidebarOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('Home');
-  const [videosList, setVideosList] = useState(() => getVideos());
-  const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false);
-  const [channelsUpdateTick, setChannelsUpdateTick] = useState(0);
 
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -61,13 +101,16 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Listen to video database changes
+  // Sync videos and channels on mount and when database updates
   useEffect(() => {
+    dispatch(fetchVideosThunk());
+    dispatch(fetchChannelsThunk());
+
     const handleVideoDatabaseUpdate = () => {
-      setVideosList(getVideos());
+      dispatch(fetchVideosThunk());
     };
     const handleChannelDatabaseUpdate = () => {
-      setChannelsUpdateTick((prev) => prev + 1);
+      dispatch(fetchChannelsThunk());
     };
 
     window.addEventListener('yt-video-updated', handleVideoDatabaseUpdate);
@@ -76,7 +119,7 @@ export default function App() {
       window.removeEventListener('yt-video-updated', handleVideoDatabaseUpdate);
       window.removeEventListener('yt-channel-updated', handleChannelDatabaseUpdate);
     };
-  }, []);
+  }, [dispatch]);
 
   // Navigation helpers
   const navigateTo = (path) => {
@@ -96,7 +139,11 @@ export default function App() {
   };
 
   const handleOpenCreateChannel = () => {
-    setIsCreateChannelModalOpen(true);
+    dispatch(setCreateChannelModalOpen(true));
+  };
+
+  const handleCloseCreateChannel = () => {
+    dispatch(setCreateChannelModalOpen(false));
   };
 
   const handleSignInClick = () => {
@@ -104,35 +151,54 @@ export default function App() {
   };
 
   const handleAuthSuccess = (user) => {
-    setCurrentUser(user);
+    dispatch(setUser(user));
     navigateTo('/');
   };
 
   const handleLogout = () => {
-    logoutUser();
-    setCurrentUser(null);
+    dispatch(logout());
   };
 
   // Toggle sidebar
   const handleToggleSidebar = () => {
     if (isWatchRoute) {
-      setIsWatchSidebarOpen((prev) => !prev);
+      dispatch(toggleWatchSidebar());
     } else {
-      setIsSidebarOpen((prev) => !prev);
+      dispatch(toggleSidebar());
     }
   };
 
   // Close sidebar on mobile / overlay click
   const handleCloseSidebar = () => {
-    setIsSidebarOpen(false);
-    setIsWatchSidebarOpen(false);
+    dispatch(setSidebarOpen(false));
+    dispatch(setWatchSidebarOpen(false));
   };
 
   const handleSelectTab = (tab) => {
-    setActiveTab(tab);
+    dispatch(setActiveTab(tab));
     if (tab === 'Home') {
       navigateTo('/');
     }
+  };
+
+  const handleSearchChange = (query) => {
+    dispatch(setSearchQuery(query));
+  };
+
+  const handleSearchSubmit = (query) => {
+    dispatch(setSearchQuery(query));
+    if (isWatchRoute || isAuthRoute || isChannelRoute) {
+      navigateTo('/');
+    }
+  };
+
+  const handleSelectCategory = (category) => {
+    dispatch(setSelectedCategory(category));
+  };
+
+  const handleResetFilters = () => {
+    dispatch(setSelectedCategory('All'));
+    dispatch(setSearchQuery(''));
   };
 
   // Determine current active route
@@ -141,35 +207,6 @@ export default function App() {
   const isWatchRoute = Boolean(watchVideoId);
   const channelId = extractChannelId(currentPath, currentSearch);
   const isChannelRoute = Boolean(channelId);
-
-  // User primary channel (if any)
-  const userPrimaryChannel = useMemo(() => {
-    if (channelsUpdateTick < 0) return null;
-    return currentUser ? getUserPrimaryChannel(currentUser.userId) : null;
-  }, [currentUser, channelsUpdateTick]);
-
-  // Filter videos based on category selection and search query
-  const filteredVideos = useMemo(() => {
-    return videosList.filter((video) => {
-      const normalizedQuery = searchQuery.trim().toLowerCase();
-      const matchesSearch =
-        normalizedQuery === '' ||
-        video.title.toLowerCase().includes(normalizedQuery) ||
-        (video.channelName && video.channelName.toLowerCase().includes(normalizedQuery)) ||
-        (video.description && video.description.toLowerCase().includes(normalizedQuery));
-
-      if (!matchesSearch) return false;
-
-      if (selectedCategory === 'All') return true;
-
-      return video.category?.toLowerCase() === selectedCategory.toLowerCase();
-    });
-  }, [videosList, selectedCategory, searchQuery]);
-
-  const handleResetFilters = () => {
-    setSelectedCategory('All');
-    setSearchQuery('');
-  };
 
   return (
     <div
@@ -181,13 +218,8 @@ export default function App() {
       <Header
         onToggleSidebar={handleToggleSidebar}
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onSearchSubmit={(query) => {
-          setSearchQuery(query);
-          if (isWatchRoute || isAuthRoute || isChannelRoute) {
-            navigateTo('/');
-          }
-        }}
+        onSearchChange={handleSearchChange}
+        onSearchSubmit={handleSearchSubmit}
         currentUser={currentUser}
         onNavigateSignIn={handleSignInClick}
         onNavigateHome={() => navigateTo('/')}
@@ -210,7 +242,7 @@ export default function App() {
             <>
               <div
                 className="fixed inset-0 bg-black/60 z-50 backdrop-blur-[2px] transition-opacity"
-                onClick={() => setIsWatchSidebarOpen(false)}
+                onClick={() => dispatch(setWatchSidebarOpen(false))}
                 aria-hidden="true"
               />
               <div className="fixed top-14 left-0 bottom-0 z-50 w-60 bg-[#0f0f0f] shadow-2xl">
@@ -219,15 +251,15 @@ export default function App() {
                   activeTab={activeTab}
                   onSelectTab={(tab) => {
                     handleSelectTab(tab);
-                    setIsWatchSidebarOpen(false);
+                    dispatch(setWatchSidebarOpen(false));
                   }}
                   userChannelId={userPrimaryChannel?.channelId}
                   onNavigateChannel={(chId) => {
-                    setIsWatchSidebarOpen(false);
+                    dispatch(setWatchSidebarOpen(false));
                     handleNavigateChannel(chId);
                   }}
                   onOpenCreateChannel={() => {
-                    setIsWatchSidebarOpen(false);
+                    dispatch(setWatchSidebarOpen(false));
                     handleOpenCreateChannel();
                   }}
                 />
@@ -305,7 +337,7 @@ export default function App() {
           <main className="yt-main-content flex-1 min-w-0 flex flex-col bg-[#0f0f0f]">
             <FilterBar
               selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
+              onSelectCategory={handleSelectCategory}
             />
 
             <div className="yt-content-inner p-4 sm:p-6 flex-1">
@@ -323,7 +355,7 @@ export default function App() {
       {/* Modal to Create Channel (available after user signs in) */}
       <CreateChannelModal
         isOpen={isCreateChannelModalOpen}
-        onClose={() => setIsCreateChannelModalOpen(false)}
+        onClose={handleCloseCreateChannel}
         currentUser={currentUser}
         onNavigateSignIn={handleSignInClick}
         onChannelCreated={(newChannel) => {

@@ -1,9 +1,29 @@
+/**
+ * Comment Section Component
+ * Handles YouTube video commenting workflow:
+ * - Total comments counter
+ * - Sorting toggle (Top comments vs Newest first)
+ * - Comment input box with focus underline and Cancel/Comment buttons
+ * - Individual comment rendering with time ago and edited badge
+ * - Options menu (Edit, Delete) for author
+ * - Inline edit mode with Save / Cancel
+ * - Like and dislike counters on individual comments
+ */
+
 import { useState, useMemo } from 'react';
+import { useDispatch } from 'react-redux';
 import { ThumbUpIcon, ThumbDownIcon, MoreVerticalIcon, EditIcon, TrashIcon, SortIcon } from './Icons';
+
 import { formatTimeAgo } from '../utils/formatters';
 import { addComment, editComment, deleteComment } from '../utils/videoService';
+import {
+  addCommentThunk,
+  editCommentThunk,
+  deleteCommentThunk
+} from '../store/slices/videoSlice';
 
 export default function CommentSection({ videoId, comments = [], currentUser, onCommentUpdated }) {
+  const dispatch = useDispatch();
   const [newCommentText, setNewCommentText] = useState('');
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
@@ -37,6 +57,7 @@ export default function CommentSection({ videoId, comments = [], currentUser, on
         user: currentUser
       });
 
+      dispatch(addCommentThunk({ videoId, text: newCommentText.trim(), user: currentUser }));
       setNewCommentText('');
       setIsInputFocused(false);
       if (onCommentUpdated) {
@@ -60,6 +81,7 @@ export default function CommentSection({ videoId, comments = [], currentUser, on
 
     try {
       const { video } = editComment(videoId, commentId, editingText.trim());
+      dispatch(editCommentThunk({ videoId, commentId, text: editingText.trim() }));
       setEditingCommentId(null);
       setEditingText('');
       if (onCommentUpdated) {
@@ -84,6 +106,7 @@ export default function CommentSection({ videoId, comments = [], currentUser, on
 
     try {
       const { video } = deleteComment(videoId, commentId);
+      dispatch(deleteCommentThunk({ videoId, commentId }));
       setActiveMenuCommentId(null);
       if (onCommentUpdated) {
         onCommentUpdated(video);

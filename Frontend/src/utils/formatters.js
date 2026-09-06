@@ -1,3 +1,15 @@
+/**
+ * Formatting utilities for numbers, relative timestamps, and media assets.
+ */
+
+/**
+ * Formats a raw view count number into YouTube-style abbreviated strings.
+ * Examples:
+ * - 450 -> '450 views'
+ * - 1200 -> '1.2K views'
+ * - 3500000 -> '3.5M views'
+ * - 1500000000 -> '1.5B views'
+ */
 export function formatViews(views) {
   if (views === undefined || views === null) return '0 views';
   const num = Number(views);
@@ -15,6 +27,10 @@ export function formatViews(views) {
   return `${num} views`;
 }
 
+/**
+ * Converts an ISO date or timestamp into a human-readable relative time string.
+ * Examples: 'Just now', '5 minutes ago', '2 hours ago', '3 days ago', '1 month ago', '2 years ago'.
+ */
 export function formatTimeAgo(dateString) {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -23,20 +39,31 @@ export function formatTimeAgo(dateString) {
   const now = new Date();
   const diffInSeconds = Math.floor((now - date) / 1000);
 
+  // Less than a minute
   if (diffInSeconds < 60) return 'Just now';
+
+  // Minutes
   const minutes = Math.floor(diffInSeconds / 60);
   if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+
+  // Hours
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+
+  // Days
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days} day${days > 1 ? 's' : ''} ago`;
+
+  // Months
   const months = Math.floor(days / 30);
   if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`;
+
+  // Years
   const years = Math.floor(days / 365);
   return `${years} year${years > 1 ? 's' : ''} ago`;
 }
 
-// Guaranteed beautiful placeholder thumbnail if an external URL fails or is example.com
+// Guaranteed placeholder thumbnails for fallback
 export const DEFAULT_FALLBACK_THUMBNAILS = [
   'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80',
   'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
@@ -44,6 +71,10 @@ export const DEFAULT_FALLBACK_THUMBNAILS = [
   'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
 ];
 
+/**
+ * Returns a guaranteed valid thumbnail URL. If an empty or dead example.com URL is provided,
+ * returns an attractive tech-themed fallback image.
+ */
 export function getSafeThumbnail(url, index = 0) {
   if (!url || url.includes('example.com')) {
     return DEFAULT_FALLBACK_THUMBNAILS[index % DEFAULT_FALLBACK_THUMBNAILS.length];
@@ -51,15 +82,20 @@ export function getSafeThumbnail(url, index = 0) {
   return url;
 }
 
+// Fallback banners for channel profiles
 export const DEFAULT_FALLBACK_BANNERS = [
   'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80',
   'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80',
   'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1600&q=80'
 ];
 
+/**
+ * Returns a guaranteed valid banner URL.
+ */
 export function getSafeBanner(url, index = 0) {
   if (!url || url.includes('example.com')) {
     return DEFAULT_FALLBACK_BANNERS[index % DEFAULT_FALLBACK_BANNERS.length];
   }
   return url;
 }
+

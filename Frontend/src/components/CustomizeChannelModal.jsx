@@ -1,6 +1,17 @@
+/**
+ * Customize Channel Modal
+ * Allows creators to edit their channel branding:
+ * - Update channel title & description
+ * - Pick from curated banner presets or enter custom image URL
+ * - Update creator avatar URL
+ */
+
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { updateChannel } from '../utils/channelService';
+
 import { getSafeBanner } from '../utils/formatters';
+import { updateChannelThunk } from '../store/slices/channelSlice';
 
 const PRESET_BANNERS = [
   'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80',
@@ -15,6 +26,7 @@ export default function CustomizeChannelModal({
   onClose,
   onChannelUpdated
 }) {
+  const dispatch = useDispatch();
   const [channelName, setChannelName] = useState(channel?.channelName || '');
   const [description, setDescription] = useState(channel?.description || '');
   const [bannerUrl, setBannerUrl] = useState(channel?.channelBanner || '');
@@ -35,12 +47,14 @@ export default function CustomizeChannelModal({
 
     setIsSubmitting(true);
     try {
-      const updated = updateChannel(channel.channelId, {
+      const fields = {
         channelName: channelName.trim(),
         description: description.trim(),
         channelBanner: bannerUrl.trim() || channel.channelBanner,
         avatarUrl: avatarUrl.trim() || channel.avatarUrl
-      });
+      };
+      const updated = updateChannel(channel.channelId, fields);
+      dispatch(updateChannelThunk({ channelId: channel.channelId, fields }));
 
       setIsSubmitting(false);
       onClose();

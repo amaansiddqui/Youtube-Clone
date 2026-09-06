@@ -1,3 +1,13 @@
+/**
+ * Top Navigation Header
+ * Features:
+ * - Hamburger toggle for navigation sidebar
+ * - YouTube logo brand link to home
+ * - Search bar with submit & quick clear buttons
+ * - Quick 'Create' button for publishing channels/videos
+ * - User profile dropdown with channels & sign out
+ */
+
 import { useState } from 'react';
 import { MenuIcon, YouTubeLogo, SearchIcon, MicIcon, CreateIcon, BellIcon, UserCircleIcon } from './Icons';
 
@@ -16,6 +26,7 @@ export default function Header({
 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
+  // Trigger search on form submit
   const handleSubmit = (e) => {
     e.preventDefault();
     if (onSearchSubmit) {
@@ -23,12 +34,14 @@ export default function Header({
     }
   };
 
+  // Sync search input with parent state
   const handleInputChange = (e) => {
     if (onSearchChange) {
       onSearchChange(e.target.value);
     }
   };
 
+  // Reset search query
   const clearSearch = () => {
     if (onSearchChange) {
       onSearchChange('');
@@ -37,6 +50,7 @@ export default function Header({
       onSearchSubmit('');
     }
   };
+
 
   return (
     <header className="yt-header sticky top-0 z-50 h-14 bg-[#0f0f0f] flex items-center justify-between px-4 border-b border-white/10 select-none">

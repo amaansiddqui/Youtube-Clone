@@ -1,4 +1,13 @@
+/**
+ * Category Filter Bar
+ * Displays YouTube-style horizontal chips for topic filtering (All, React, JavaScript, etc.).
+ * Supports smooth horizontal scroll buttons on larger screens.
+ */
+
 import { useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectSelectedCategory, setSelectedCategory } from '../store/slices/videoSlice';
+
 
 const CATEGORIES = [
   'All',
@@ -17,8 +26,18 @@ const CATEGORIES = [
   'New to you'
 ];
 
-export default function FilterBar({ selectedCategory = 'All', onSelectCategory }) {
+export default function FilterBar({ selectedCategory: propCategory, onSelectCategory }) {
   const scrollRef = useRef(null);
+  const dispatch = useDispatch();
+  const reduxCategory = useSelector(selectSelectedCategory);
+  const currentCategory = propCategory !== undefined ? propCategory : reduxCategory;
+
+  const handleSelect = (category) => {
+    if (onSelectCategory) {
+      onSelectCategory(category);
+    }
+    dispatch(setSelectedCategory(category));
+  };
 
   const handleScroll = (direction) => {
     if (scrollRef.current) {
@@ -39,7 +58,7 @@ export default function FilterBar({ selectedCategory = 'All', onSelectCategory }
 
       <div className="yt-filter-chips flex items-center gap-3 overflow-x-auto scroll-smooth flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" ref={scrollRef}>
         {CATEGORIES.map((category) => {
-          const isActive = selectedCategory === category;
+          const isActive = currentCategory === category;
           return (
             <button
               key={category}
@@ -48,7 +67,7 @@ export default function FilterBar({ selectedCategory = 'All', onSelectCategory }
                   ? 'active bg-white text-black font-semibold'
                   : 'bg-white/10 hover:bg-white/15 text-white font-medium'
               }`}
-              onClick={() => onSelectCategory(category)}
+              onClick={() => handleSelect(category)}
             >
               {category}
             </button>

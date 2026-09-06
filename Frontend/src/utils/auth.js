@@ -1,5 +1,9 @@
-// User Authentication service using JWT and localStorage
+/**
+ * User Authentication service using client-side tokens and localStorage persistence.
+ * Provides login, registration, and active session management with graceful offline fallback.
+ */
 
+// Default demo user seeded for instant testing
 export const SAMPLE_USER = {
   userId: "user01",
   username: "JohnDoe",
@@ -9,69 +13,101 @@ export const SAMPLE_USER = {
   channels: ["channel01"]
 };
 
+// Local storage cache keys
 const STORAGE_USERS_KEY = 'yt_registered_users';
 const STORAGE_TOKEN_KEY = 'yt_auth_token';
 
-// JWT generation and verification in standard header.payload.signature format
+/**
+ * Encodes a string into a URL-safe Base64 representation.
+ * Handles UTF-8 characters cleanly without deprecated unescape().
+ */
 function base64UrlEncode(str) {
-  const base64 = btoa(unescape(encodeURIComponent(str)));
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+    String.fromCharCode(parseInt(p1, 16))
+  );
+  return btoa(utf8Bytes)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
+/**
+ * Decodes a URL-safe Base64 string back into a standard UTF-8 string.
+ */
 function base64UrlDecode(str) {
   let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  // Pad with '=' to make length a multiple of 4
   while (base64.length % 4) {
     base64 += '=';
   }
-  return decodeURIComponent(escape(atob(base64)));
+  const binary = atob(base64);
+  const percentEncoded = Array.from(binary, (c) =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join('');
+  return decodeURIComponent(percentEncoded);
 }
 
+/**
+ * Creates a standard 3-part JWT (header.payload.signature) for client-side demo sessions.
+ */
 export function generateJWT(payload, secret = 'yt_clone_jwt_secret_key_2024') {
   const header = {
     alg: 'HS256',
     typ: 'JWT'
   };
+
   const stringifiedHeader = JSON.stringify(header);
   const stringifiedPayload = JSON.stringify({
     ...payload,
     iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
+    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days lifespan
   });
 
   const encodedHeader = base64UrlEncode(stringifiedHeader);
   const encodedPayload = base64UrlEncode(stringifiedPayload);
 
-  // Simple HMAC-like signature representation for client-side JWT demonstration
+  // Client-side representation of signature
   const rawSignature = `${encodedHeader}.${encodedPayload}.${secret}`;
   const encodedSignature = base64UrlEncode(rawSignature);
 
   return `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
 }
 
+/**
+ * Parses and verifies an active JWT token.
+ * Validates expiration timestamp and returns the payload claims if valid.
+ */
 export function decodeJWT(token) {
   try {
     if (!token) return null;
+
     const parts = token.split('.');
     if (parts.length !== 3) return null;
+
     const decodedPayloadStr = base64UrlDecode(parts[1]);
     const payload = JSON.parse(decodedPayloadStr);
 
-    // Check expiration
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+    // Verify token expiration
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < currentTimestamp) {
       return null;
     }
+
     return payload;
   } catch (err) {
-    console.error('Error decoding JWT:', err);
+    console.error('Error decoding JWT token:', err);
     return null;
   }
 }
 
+/**
+ * Reads the list of registered users from localStorage.
+ * Seeds with the default sample user if storage is empty.
+ */
 export function getUsers() {
   try {
     const raw = localStorage.getItem(STORAGE_USERS_KEY);
     if (!raw) {
-      // Seed with sample user
       const initialUsers = [SAMPLE_USER];
       localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(initialUsers));
       return initialUsers;
@@ -82,22 +118,31 @@ export function getUsers() {
   }
 }
 
+/**
+ * Saves the users list to localStorage.
+ */
 export function saveUsers(users) {
   try {
     localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(users));
   } catch (err) {
-    console.error('Error saving users to storage', err);
+    console.error('Error saving users to storage:', err);
   }
 }
 
+/**
+ * Registers a new user account locally.
+ */
 export function registerUser({ username, email, password }) {
   if (!username || !email || !password) {
     throw new Error('All fields (Username, Email, Password) are required.');
   }
 
+  const emailLower = email.trim().toLowerCase();
+  const trimmedUsername = username.trim();
+
   const users = getUsers();
   const existing = users.find(
-    (u) => u.email.toLowerCase() === email.toLowerCase() || u.username.toLowerCase() === username.toLowerCase()
+    (u) => u.email.toLowerCase() === emailLower || u.username.toLowerCase() === trimmedUsername.toLowerCase()
   );
 
   if (existing) {
@@ -106,17 +151,17 @@ export function registerUser({ username, email, password }) {
 
   const newUser = {
     userId: `user_${Date.now()}`,
-    username: username.trim(),
-    email: email.trim().toLowerCase(),
-    password: password, // In production this would be hashed on backend
-    avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username.trim())}&backgroundColor=cc0000,0073e6,2ba640`,
+    username: trimmedUsername,
+    email: emailLower,
+    password: password,
+    avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(trimmedUsername)}&backgroundColor=cc0000,0073e6,2ba640`,
     channels: [`channel_${Date.now()}`]
   };
 
   users.push(newUser);
   saveUsers(users);
 
-  // Issue JWT token
+  // Issue session token
   const token = generateJWT({
     userId: newUser.userId,
     username: newUser.username,
@@ -129,6 +174,21 @@ export function registerUser({ username, email, password }) {
   return { user: newUser, token };
 }
 
+/**
+ * Helper: Validates user password against stored credentials.
+ * Supports the demo seed account password variations (password123 / hashedPassword123).
+ */
+function verifyPassword(storedPassword, enteredPassword, userEmail) {
+  if (storedPassword === enteredPassword) return true;
+  if (userEmail === 'john@example.com' && (enteredPassword === 'password123' || enteredPassword === 'hashedPassword123')) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Logs in a user by matching their email/username and password.
+ */
 export function loginUser({ identity, password }) {
   if (!identity || !password) {
     throw new Error('Username/Email and Password are required.');
@@ -140,14 +200,14 @@ export function loginUser({ identity, password }) {
   const user = users.find(
     (u) =>
       (u.email.toLowerCase() === idLower || u.username.toLowerCase() === idLower) &&
-      (u.password === password || (idLower === 'john@example.com' && password === 'hashedPassword123'))
+      verifyPassword(u.password, password, u.email)
   );
 
   if (!user) {
     throw new Error('Invalid username/email or password.');
   }
 
-  // Issue JWT token
+  // Issue session token
   const token = generateJWT({
     userId: user.userId,
     username: user.username,
@@ -160,17 +220,24 @@ export function loginUser({ identity, password }) {
   return { user, token };
 }
 
+/**
+ * Retrieves the currently signed-in user by decoding the stored JWT token.
+ * Returns null if not logged in or token is expired.
+ */
 export function getCurrentUser() {
   try {
     const token = localStorage.getItem(STORAGE_TOKEN_KEY);
     if (!token) return null;
-    const payload = decodeJWT(token);
-    return payload;
+    return decodeJWT(token);
   } catch {
     return null;
   }
 }
 
+/**
+ * Clears the user's active session token on sign out.
+ */
 export function logoutUser() {
   localStorage.removeItem(STORAGE_TOKEN_KEY);
 }
+

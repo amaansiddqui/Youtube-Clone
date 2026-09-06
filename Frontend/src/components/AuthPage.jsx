@@ -1,8 +1,21 @@
+/**
+ * Google-Themed Authentication Page
+ * Supports:
+ * - Switching between 'Sign in' and 'Create a Google Account'
+ * - Email or Username login credentials
+ * - One-click demo user autofill ('Use Demo Account')
+ * - Form validation and clear inline error alerts
+ */
+
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { GoogleGIcon } from './Icons';
 import { loginUser, registerUser, SAMPLE_USER } from '../utils/auth';
+import { setUser } from '../store/slices/authSlice';
+
 
 export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
+  const dispatch = useDispatch();
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -27,6 +40,7 @@ export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
           identity: email || username,
           password
         });
+        dispatch(setUser(user));
         if (onAuthSuccess) {
           onAuthSuccess(user);
         }
@@ -36,6 +50,7 @@ export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
           email,
           password
         });
+        dispatch(setUser(user));
         if (onAuthSuccess) {
           onAuthSuccess(user);
         }

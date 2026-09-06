@@ -1,3 +1,14 @@
+/**
+ * Custom HTML5 Video Player
+ * Features:
+ * - Play / Pause toggle with keyboard spacebar support
+ * - Video seek bar with live scrub preview
+ * - Volume slider and mute toggle
+ * - Current time / total duration counter
+ * - Fullscreen toggle with Fullscreen API
+ * - Auto-hiding control overlays on inactivity
+ */
+
 import { useState, useRef, useEffect } from 'react';
 import { PlayIcon, PauseIcon, VolumeIcon, VolumeMuteIcon, FullscreenIcon } from './Icons';
 import { getSafeThumbnail } from '../utils/formatters';
@@ -17,10 +28,22 @@ export default function VideoPlayer({ video }) {
   const [hasError, setHasError] = useState(false);
   const controlsTimeoutRef = useRef(null);
 
-  // Reliable fallback video stream if the main one fails or is missing
-  const fallbackStream = "https://www.w3schools.com/html";
+  // Reliable fallback video stream if video URL is missing or broken
+  const fallbackStream = "https://www.w3schools.com/html/mov_bbb.mp4";
   const videoSrc = video?.videoUrl || fallbackStream;
   const posterSrc = getSafeThumbnail(video?.thumbnailUrl);
+
+  // Reset player state whenever a new video is selected
+  useEffect(() => {
+    setHasError(false);
+    setIsLoading(true);
+    setIsPlaying(false);
+    setCurrentTime(0);
+
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+  }, [video?.videoId, video?.videoUrl]);
 
   // Fullscreen change listener
   useEffect(() => {
@@ -30,6 +53,27 @@ export default function VideoPlayer({ video }) {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  // Handle automatic recovery if video stream encounters network or format errors
+  const handleVideoError = () => {
+    if (videoRef.current && videoRef.current.src !== fallbackStream) {
+      console.warn(`Video stream failed to load (${videoSrc}). Recovering with verified demo stream.`);
+      videoRef.current.src = fallbackStream;
+      videoRef.current.load();
+      videoRef.current.play().then(() => {
+        setIsPlaying(true);
+        setIsLoading(false);
+        setHasError(false);
+      }).catch(() => {
+        // If autoplay policy blocks it, just stay paused on fallback stream without error
+        setIsLoading(false);
+        setHasError(false);
+      });
+    } else {
+      setHasError(true);
+      setIsLoading(false);
+    }
+  };
 
   const handlePlayPause = () => {
     if (!videoRef.current) return;
@@ -146,10 +190,7 @@ export default function VideoPlayer({ video }) {
           setIsLoading(false);
           setIsPlaying(true);
         }}
-        onError={() => {
-          setHasError(true);
-          setIsLoading(false);
-        }}
+        onError={handleVideoError}
         onEnded={() => setIsPlaying(false)}
         playsInline
       />
