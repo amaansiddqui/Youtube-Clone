@@ -12,11 +12,11 @@ export const initialUsers = [
 export const initialChannels = [
   {
     channelId: "channel01",
-    channelName: "Code with John",
+    channelName: "Code with Marry",
     owner: "user01",
     description: "Coding tutorials and tech reviews by John Doe.",
     channelBanner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
-    avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=160&q=80",
+    avatarUrl: "https://static.vecteezy.com/system/resources/thumbnails/043/101/076/small_2x/ai-generated-teacher-standing-in-a-school-classroom-photo.jpeg",
     subscribers: 5200,
     videos: ["video01", "video02"],
     createdAt: "2024-01-15T00:00:00.000Z"
@@ -49,7 +49,7 @@ export const initialVideos = [
   {
     videoId: "video01",
     title: "Learn React in 30 Minutes",
-    thumbnailUrl: "https://example.com/thumbnails/react30min.png",
+    thumbnailUrl: "https://fiverr-res.cloudinary.com/images/t_main1,q_auto,f_auto,q_auto,f_auto/gigs/361654051/original/4d346061de746c0945c747204bcf70caf7cf1a0b/create-youtube-thumbnail-in-3-hours.png",
     videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
     description: "A quick tutorial to get started with React.",
     channelId: "channel01",
@@ -122,5 +122,26 @@ export const initialVideos = [
     category: "JavaScript",
     avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
     comments: []
+  },
+
+  {
+    videoId: "video04",
+    title: "JavaScript Pro Tips: 10 Hidden Features You Need to Know",
+    thumbnailUrl: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?auto=format&fit=crop&w=1280&q=80",
+    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    description: "Level up your modern JavaScript knowledge with clean code practices, optional chaining, structuredClone, async generators, and performance tricks.",
+    channelId: "channel03",
+    channelName: "JS Wizards",
+    uploader: "JS Wizards",
+    subscribers: "620K",
+    views: 342100,
+    likes: 18450,
+    dislikes: 320,
+    uploadDate: "2024-07-02",
+    duration: "18:04",
+    category: "JavaScript",
+    avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
+    comments: []
+
   }
 ];
