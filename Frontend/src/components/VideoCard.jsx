@@ -14,17 +14,16 @@ import { formatViews, formatTimeAgo, getSafeThumbnail } from '../utils/formatter
 import { VerifiedIcon, MoreVerticalIcon } from './Icons';
 
 export default function VideoCard({ video, index = 0, onSelectVideo, onNavigateChannel }) {
-  const [imgError, setImgError] = useState(false);
+  const [failedUrl, setFailedUrl] = useState(null);
 
-  // Fallback to high-quality placeholder thumbnail if URL is broken
-  const initialThumb = getSafeThumbnail(video.thumbnailUrl, index);
-  const [currentThumb, setCurrentThumb] = useState(initialThumb);
+  // Derived thumbnail: if current URL failed to load, use guaranteed fallback
+  const isBroken = failedUrl === video?.thumbnailUrl;
+  const currentThumb = isBroken
+    ? getSafeThumbnail('', index)
+    : getSafeThumbnail(video?.thumbnailUrl, index);
 
   const handleImageError = () => {
-    if (!imgError) {
-      setImgError(true);
-      setCurrentThumb('https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80');
-    }
+    setFailedUrl(video?.thumbnailUrl || 'broken');
   };
 
 

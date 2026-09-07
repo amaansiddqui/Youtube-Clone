@@ -68,7 +68,9 @@ export default function VideoWatchPage({
         const fresh = getVideoById(videoId);
         if (fresh) {
           setVideo(fresh);
+          setIsSubscribed(getChannelSubscription(fresh.channelId));
         }
+        setUserStatus(getUserVideoInteraction(videoId));
       }
       setAllVideosList(getVideos());
     };
@@ -78,33 +80,79 @@ export default function VideoWatchPage({
   }, [videoId]);
 
   // Handle Likes
-  const handleLikeClick = () => {
+  const handleLikeClick = async () => {
     if (!video) return;
+    const previousStatus = userStatus;
     const result = toggleVideoLike(video.videoId);
     if (result) {
       setVideo(result.video);
       setUserStatus(result.userStatus);
-      dispatch(toggleLikeThunk(video.videoId));
+      try {
+        const res = await dispatch(
+          toggleLikeThunk({
+            videoId: video.videoId,
+            currentStatus: previousStatus,
+            user: currentUser
+          })
+        ).unwrap();
+        if (res?.video) {
+          setVideo((prev) => ({
+            ...prev,
+            likes: res.video.likes,
+            dislikes: res.video.dislikes
+          }));
+          if (res.userStatus !== undefined) {
+            setUserStatus(res.userStatus);
+          }
+        }
+      } catch {
+        // Local optimistic update was already performed
+      }
     }
   };
 
   // Handle Dislikes
-  const handleDislikeClick = () => {
+  const handleDislikeClick = async () => {
     if (!video) return;
+    const previousStatus = userStatus;
     const result = toggleVideoDislike(video.videoId);
     if (result) {
       setVideo(result.video);
       setUserStatus(result.userStatus);
-      dispatch(toggleDislikeThunk(video.videoId));
+      try {
+        const res = await dispatch(
+          toggleDislikeThunk({
+            videoId: video.videoId,
+            currentStatus: previousStatus,
+            user: currentUser
+          })
+        ).unwrap();
+        if (res?.video) {
+          setVideo((prev) => ({
+            ...prev,
+            likes: res.video.likes,
+            dislikes: res.video.dislikes
+          }));
+          if (res.userStatus !== undefined) {
+            setUserStatus(res.userStatus);
+          }
+        }
+      } catch {
+        // Local optimistic update was already performed
+      }
     }
   };
 
   // Handle Channel Subscribe
-  const handleToggleSubscribe = () => {
+  const handleToggleSubscribe = async () => {
     if (!video?.channelId) return;
     const newState = toggleChannelSubscription(video.channelId);
     setIsSubscribed(newState);
-    dispatch(toggleSubscribeThunk(video.channelId));
+    try {
+      await dispatch(toggleSubscribeThunk(video.channelId)).unwrap();
+    } catch (e) {
+      void e;
+    }
   };
 
   // Handle Share link copy

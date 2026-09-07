@@ -45,12 +45,15 @@ export default function CreateChannelModal({
 
     setIsSubmitting(true);
     try {
+      const channelId = `channel_${Date.now()}`;
       const channelData = {
+        channelId,
         channelName: channelName.trim(),
         description: description.trim(),
         channelBanner: bannerUrl.trim(),
         avatarUrl: avatarUrl.trim() || currentUser.avatar,
-        currentUser
+        currentUser,
+        owner: currentUser.userId
       };
       const newChannel = createChannel(channelData);
       dispatch(createChannelThunk(channelData));

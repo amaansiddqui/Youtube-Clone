@@ -52,12 +52,14 @@ export default function CommentSection({ videoId, comments = [], currentUser, on
     if (!newCommentText.trim()) return;
 
     try {
+      const commentId = `c_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
       const { video } = addComment(videoId, {
+        commentId,
         text: newCommentText.trim(),
         user: currentUser
       });
 
-      dispatch(addCommentThunk({ videoId, text: newCommentText.trim(), user: currentUser }));
+      dispatch(addCommentThunk({ videoId, commentId, text: newCommentText.trim(), user: currentUser }));
       setNewCommentText('');
       setIsInputFocused(false);
       if (onCommentUpdated) {

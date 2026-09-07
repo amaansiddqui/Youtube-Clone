@@ -147,7 +147,9 @@ export default function ChannelPage({
     if (!uploadTitle.trim()) return;
 
     try {
+      const videoId = `video_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const vidData = {
+        videoId,
         title: uploadTitle.trim(),
         description: uploadDesc.trim(),
         category: uploadCategory,

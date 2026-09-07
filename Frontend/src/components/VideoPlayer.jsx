@@ -18,32 +18,33 @@ export default function VideoPlayer({ video }) {
   const containerRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [thumbError, setThumbError] = useState(false);
   const controlsTimeoutRef = useRef(null);
 
   // Reliable fallback video stream if video URL is missing or broken
   const fallbackStream = "https://www.w3schools.com/html/mov_bbb.mp4";
   const videoSrc = video?.videoUrl || fallbackStream;
-  const posterSrc = getSafeThumbnail(video?.thumbnailUrl);
+  const posterSrc = thumbError
+    ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1280&q=80'
+    : getSafeThumbnail(video?.thumbnailUrl);
 
-  // Reset player state whenever a new video is selected
+  // Pause and reload video stream when source URL changes
   useEffect(() => {
-    setHasError(false);
-    setIsLoading(true);
-    setIsPlaying(false);
-    setCurrentTime(0);
-
     if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
       videoRef.current.load();
     }
-  }, [video?.videoId, video?.videoUrl]);
+  }, [video?.videoUrl]);
 
   // Fullscreen change listener
   useEffect(() => {
@@ -81,10 +82,14 @@ export default function VideoPlayer({ video }) {
       videoRef.current.pause();
       setIsPlaying(false);
     } else {
+      setIsLoading(true);
       videoRef.current.play().then(() => {
         setIsPlaying(true);
+        setHasStarted(true);
+        setIsLoading(false);
       }).catch((e) => {
         console.error('Playback error:', e);
+        setIsLoading(false);
       });
     }
   };
@@ -181,6 +186,7 @@ export default function VideoPlayer({ video }) {
         ref={videoRef}
         src={videoSrc}
         poster={posterSrc}
+        preload="metadata"
         className="w-full h-full object-contain cursor-pointer bg-black"
         onClick={handlePlayPause}
         onTimeUpdate={handleTimeUpdate}
@@ -189,24 +195,52 @@ export default function VideoPlayer({ video }) {
         onPlaying={() => {
           setIsLoading(false);
           setIsPlaying(true);
+          setHasStarted(true);
         }}
         onError={handleVideoError}
         onEnded={() => setIsPlaying(false)}
         playsInline
       />
 
-      {/* Buffering Spinner */}
-      {isLoading && !hasError && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/20">
+      {/* High-Resolution Thumbnail Poster Overlay (shown until user starts playback to eliminate browser poster clearing / black frame glitch) */}
+      {!hasStarted && !hasError && (
+        <div
+          className="absolute inset-0 z-20 cursor-pointer overflow-hidden bg-black flex items-center justify-center group/poster"
+          onClick={handlePlayPause}
+        >
+          <img
+            src={posterSrc}
+            alt={video?.title || 'Video thumbnail'}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover/poster:scale-[1.01]"
+            onError={() => setThumbError(true)}
+          />
+
+          {/* Contrast gradient overlay */}
+          <div className="absolute inset-0 bg-black/25 group-hover/poster:bg-black/15 transition-colors" />
+
+          {/* Large Center Play Button */}
+          <button
+            onClick={handlePlayPause}
+            className="absolute inset-0 m-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/70 hover:bg-[#cc0000] text-white flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-2xl cursor-pointer z-30 group-hover/poster:scale-105"
+            aria-label="Play video"
+          >
+            <PlayIcon size={36} className="translate-x-0.5 text-white" />
+          </button>
+        </div>
+      )}
+
+      {/* Buffering Spinner (only shown after playback has started and stream is buffering) */}
+      {hasStarted && isLoading && !hasError && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none bg-black/20">
           <div className="w-12 h-12 border-4 border-white/20 border-t-[#ff0000] rounded-full animate-spin" />
         </div>
       )}
 
-      {/* Large Center Play Button when paused */}
-      {!isPlaying && !isLoading && !hasError && (
+      {/* Large Center Play Button when paused after video has started */}
+      {hasStarted && !isPlaying && !isLoading && !hasError && (
         <button
           onClick={handlePlayPause}
-          className="absolute inset-0 m-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/60 hover:bg-[#cc0000] text-white flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-lg cursor-pointer"
+          className="absolute inset-0 m-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/60 hover:bg-[#cc0000] text-white flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-lg cursor-pointer z-20"
           aria-label="Play video"
         >
           <PlayIcon size={36} className="translate-x-0.5 text-white" />

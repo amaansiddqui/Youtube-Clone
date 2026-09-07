@@ -10,7 +10,8 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { GoogleGIcon } from './Icons';
-import { loginUser, registerUser, SAMPLE_USER } from '../utils/auth';
+import { SAMPLE_USER } from '../utils/auth';
+import { authAPI } from '../utils/api';
 import { setUser } from '../store/slices/authSlice';
 
 
@@ -30,26 +31,28 @@ export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
       if (mode === 'login') {
-        const { user } = loginUser({
+        const res = await authAPI.login({
           identity: email || username,
           password
         });
+        const user = res.user || res;
         dispatch(setUser(user));
         if (onAuthSuccess) {
           onAuthSuccess(user);
         }
       } else {
-        const { user } = registerUser({
+        const res = await authAPI.register({
           username,
           email,
           password
         });
+        const user = res.user || res;
         dispatch(setUser(user));
         if (onAuthSuccess) {
           onAuthSuccess(user);
