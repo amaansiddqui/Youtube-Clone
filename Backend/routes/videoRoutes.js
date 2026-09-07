@@ -18,7 +18,7 @@ function isMongoConnected() {
 }
 
 /**
- * Helper: Escapes special regex characters in user search input.
+ * Escapes special regex characters in user search input.
  * Prevents regex injection and crashes when searching for characters like '(', '[', '*', etc.
  */
 function escapeRegex(text) {
@@ -26,12 +26,12 @@ function escapeRegex(text) {
 }
 
 /**
- * Helper: Computes the updated like and dislike numbers along with user reaction status.
+ * Computes the updated like and dislike numbers along with user reaction status.
  * Replicates YouTube's reaction behavior:
- * - Clicking 'like' when already liked removes the like (returns neutral).
- * - Clicking 'like' when disliked removes dislike and adds like.
- * - Clicking 'like' when neutral adds like.
- * - Same symmetric behavior applies for 'dislike'.
+ * Clicking 'like' when already liked removes the like (returns neutral).
+ * Clicking 'like' when disliked removes dislike and adds like.
+ * Clicking 'like' when neutral adds like.
+ * Same symmetric behavior applies for 'dislike'.
  */
 function computeUpdatedReactions(currentLikes, currentDislikes, currentStatus, action) {
   let likes = Math.max(0, Number(currentLikes) || 0);
@@ -71,6 +71,218 @@ function computeUpdatedReactions(currentLikes, currentDislikes, currentStatus, a
   }
 
   return { likes, dislikes, newStatus };
+}
+
+/**
+ * Helper: Resolves the existing like/dislike reaction status for a specific user and video.
+ * Checks MongoDB user records, JSON database users, and scoped interaction keys.
+ * Never falls back to an un-scoped videoId key for an authenticated/identified user.
+ */
+async function resolveUserReactionStatus(videoId, userId, clientStatus = null, guestId = null) {
+  const db = getDB();
+
+  if (userId) {
+    // 1. Check MongoDB user document if connected
+    if (isMongoConnected()) {
+      try {
+        const user = await User.findOne({ userId });
+        if (user) {
+          if (Array.isArray(user.likedVideos) && user.likedVideos.includes(videoId)) {
+            return 'like';
+          }
+          if (Array.isArray(user.dislikedVideos) && user.dislikedVideos.includes(videoId)) {
+            return 'dislike';
+          }
+        }
+      } catch (err) {
+        console.error('Error querying user reaction in Mongo:', err);
+      }
+    }
+
+    // 2. Check JSON database user
+    const dbUser = db.users?.find((u) => u.userId === userId);
+    if (dbUser) {
+      if (Array.isArray(dbUser.likedVideos) && dbUser.likedVideos.includes(videoId)) {
+        return 'like';
+      }
+      if (Array.isArray(dbUser.dislikedVideos) && dbUser.dislikedVideos.includes(videoId)) {
+        return 'dislike';
+      }
+    }
+
+    // 3. Check JSON database scoped interaction key e.g. "user01_video01"
+    const userInteractionKey = `${userId}_${videoId}`;
+    if (db.interactions && db.interactions[userInteractionKey] !== undefined) {
+      return db.interactions[userInteractionKey];
+    }
+
+    // 4. If client provided explicit currentStatus for this user
+    if (clientStatus !== undefined && clientStatus !== null) {
+      return clientStatus;
+    }
+
+    return null;
+  }
+
+  // Guest users with guestId
+  if (guestId) {
+    const guestKey = `guest_${guestId}_${videoId}`;
+    if (db.interactions && db.interactions[guestKey] !== undefined) {
+      return db.interactions[guestKey];
+    }
+  }
+
+  if (clientStatus !== undefined && clientStatus !== null) {
+    return clientStatus;
+  }
+
+  return null;
+}
+
+/**
+ * Common handler for /:id/like and /:id/dislike actions.
+ * Guarantees per-user interaction isolation and metric synchronization across Mongo & JSON DB.
+ */
+async function handleVideoReaction(req, res, action) {
+  const videoId = req.params.id;
+  const userId = req.user?.userId || req.body.userId || req.body.user?.userId || null;
+  const guestId = req.body.guestId || req.query.guestId || null;
+  const clientStatus = req.body.currentStatus;
+
+  try {
+    const db = getDB();
+    const currentStatus = await resolveUserReactionStatus(videoId, userId, clientStatus, guestId);
+
+    if (isMongoConnected()) {
+      let video = await Video.findOne({ videoId });
+      if (!video) {
+        const localVid = db.videos.find((v) => v.videoId === videoId);
+        if (localVid) {
+          video = new Video(localVid);
+          await video.save();
+        } else {
+          return res.status(404).json({ message: 'Video not found.' });
+        }
+      }
+
+      const { likes, dislikes, newStatus } = computeUpdatedReactions(
+        video.likes,
+        video.dislikes,
+        currentStatus,
+        action
+      );
+
+      video.likes = likes;
+      video.dislikes = dislikes;
+      await video.save();
+
+      // Persist in User's liked/disliked lists in MongoDB
+      if (userId) {
+        if (newStatus === 'like') {
+          await User.findOneAndUpdate(
+            { userId },
+            { $addToSet: { likedVideos: videoId }, $pull: { dislikedVideos: videoId } }
+          );
+        } else if (newStatus === 'dislike') {
+          await User.findOneAndUpdate(
+            { userId },
+            { $addToSet: { dislikedVideos: videoId }, $pull: { likedVideos: videoId } }
+          );
+        } else {
+          await User.findOneAndUpdate(
+            { userId },
+            { $pull: { likedVideos: videoId, dislikedVideos: videoId } }
+          );
+        }
+      }
+
+      // Synchronize in JSON DB
+      const effectiveKey = userId ? `${userId}_${videoId}` : (guestId ? `guest_${guestId}_${videoId}` : null);
+      if (effectiveKey) {
+        if (newStatus) {
+          db.interactions[effectiveKey] = newStatus;
+        } else {
+          delete db.interactions[effectiveKey];
+        }
+      }
+      delete db.interactions[videoId]; // Clean legacy unscoped key
+
+      if (userId && Array.isArray(db.users)) {
+        const dbUser = db.users.find((u) => u.userId === userId);
+        if (dbUser) {
+          if (!Array.isArray(dbUser.likedVideos)) dbUser.likedVideos = [];
+          if (!Array.isArray(dbUser.dislikedVideos)) dbUser.dislikedVideos = [];
+          if (newStatus === 'like') {
+            if (!dbUser.likedVideos.includes(videoId)) dbUser.likedVideos.push(videoId);
+            dbUser.dislikedVideos = dbUser.dislikedVideos.filter((id) => id !== videoId);
+          } else if (newStatus === 'dislike') {
+            if (!dbUser.dislikedVideos.includes(videoId)) dbUser.dislikedVideos.push(videoId);
+            dbUser.likedVideos = dbUser.likedVideos.filter((id) => id !== videoId);
+          } else {
+            dbUser.likedVideos = dbUser.likedVideos.filter((id) => id !== videoId);
+            dbUser.dislikedVideos = dbUser.dislikedVideos.filter((id) => id !== videoId);
+          }
+        }
+      }
+
+      const dbVid = db.videos.find((v) => v.videoId === videoId);
+      if (dbVid) {
+        dbVid.likes = likes;
+        dbVid.dislikes = dislikes;
+      }
+      saveDB();
+
+      return res.json({ video, userStatus: newStatus });
+    }
+
+    // JSON DB fallback
+    const video = db.videos.find((v) => v.videoId === videoId);
+    if (!video) return res.status(404).json({ message: 'Video not found.' });
+
+    const { likes, dislikes, newStatus } = computeUpdatedReactions(
+      video.likes,
+      video.dislikes,
+      currentStatus,
+      action
+    );
+
+    video.likes = likes;
+    video.dislikes = dislikes;
+
+    const effectiveKey = userId ? `${userId}_${videoId}` : (guestId ? `guest_${guestId}_${videoId}` : null);
+    if (effectiveKey) {
+      if (newStatus) {
+        db.interactions[effectiveKey] = newStatus;
+      } else {
+        delete db.interactions[effectiveKey];
+      }
+    }
+    delete db.interactions[videoId]; // Clean legacy unscoped key
+
+    if (userId && Array.isArray(db.users)) {
+      const dbUser = db.users.find((u) => u.userId === userId);
+      if (dbUser) {
+        if (!Array.isArray(dbUser.likedVideos)) dbUser.likedVideos = [];
+        if (!Array.isArray(dbUser.dislikedVideos)) dbUser.dislikedVideos = [];
+        if (newStatus === 'like') {
+          if (!dbUser.likedVideos.includes(videoId)) dbUser.likedVideos.push(videoId);
+          dbUser.dislikedVideos = dbUser.dislikedVideos.filter((id) => id !== videoId);
+        } else if (newStatus === 'dislike') {
+          if (!dbUser.dislikedVideos.includes(videoId)) dbUser.dislikedVideos.push(videoId);
+          dbUser.likedVideos = dbUser.likedVideos.filter((id) => id !== videoId);
+        } else {
+          dbUser.likedVideos = dbUser.likedVideos.filter((id) => id !== videoId);
+          dbUser.dislikedVideos = dbUser.dislikedVideos.filter((id) => id !== videoId);
+        }
+      }
+    }
+
+    saveDB();
+    return res.json({ video, userStatus: newStatus });
+  } catch (err) {
+    console.error(`Error processing ${action} on video:`, err);
+    return res.status(500).json({ message: `Internal server error processing ${action}.` });
+  }
 }
 
 /**
@@ -134,17 +346,23 @@ router.get('/', async (req, res) => {
 /**
  * GET /api/videos/:id
  * Fetches the full metadata and details for a single video by its videoId.
+ * Includes userStatus if user is authenticated or userId/guestId provided.
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
   const { id } = req.params;
+  const userId = req.user?.userId || req.query.userId || null;
+  const guestId = req.query.guestId || null;
 
   try {
+    const userStatus = await resolveUserReactionStatus(id, userId, null, guestId);
+
     if (isMongoConnected()) {
       const video = await Video.findOne({ videoId: id });
       if (!video) {
         return res.status(404).json({ message: 'Video not found.' });
       }
-      return res.json(video);
+      const videoObj = video.toObject ? video.toObject() : { ...video };
+      return res.json({ ...videoObj, userStatus });
     }
 
     const db = getDB();
@@ -152,7 +370,7 @@ router.get('/:id', async (req, res) => {
     if (!video) {
       return res.status(404).json({ message: 'Video not found.' });
     }
-    return res.json(video);
+    return res.json({ ...video, userStatus });
   } catch (err) {
     console.error('Fetch video error:', err);
     return res.status(500).json({ message: 'Internal server error fetching video.' });
@@ -359,251 +577,67 @@ router.delete('/:id', async (req, res) => {
 });
 
 /**
- * POST /api/videos/:id/like
- * Toggles the 'like' state for a video and synchronizes engagement metrics in MongoDB.
+ * GET /api/videos/:id/interaction
+ * Returns the calling user's like/dislike reaction state for a video.
  */
-router.post('/:id/like', optionalAuth, async (req, res) => {
-  const videoId = req.params.id;
-  const userId = req.user?.userId || req.body.userId || req.body.user?.userId || null;
-  const clientStatus = req.body.currentStatus;
+router.get('/:id/interaction', optionalAuth, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user?.userId || req.query.userId || null;
+  const guestId = req.query.guestId || null;
 
   try {
-    const db = getDB();
-    let currentStatus = null;
-
-    if (clientStatus !== undefined && clientStatus !== null) {
-      currentStatus = clientStatus;
-    } else if (userId && isMongoConnected()) {
-      const user = await User.findOne({ userId });
-      if (user) {
-        if (Array.isArray(user.likedVideos) && user.likedVideos.includes(videoId)) {
-          currentStatus = 'like';
-        } else if (Array.isArray(user.dislikedVideos) && user.dislikedVideos.includes(videoId)) {
-          currentStatus = 'dislike';
-        }
-      }
-    }
-
-    if (!currentStatus) {
-      const interactionKey = userId ? `${userId}_${videoId}` : videoId;
-      currentStatus = db.interactions[interactionKey] || db.interactions[videoId] || null;
-    }
-
-    if (isMongoConnected()) {
-      let video = await Video.findOne({ videoId });
-      if (!video) {
-        // Fallback to local video if exists
-        const localVid = db.videos.find((v) => v.videoId === videoId);
-        if (localVid) {
-          video = new Video(localVid);
-          await video.save();
-        } else {
-          return res.status(404).json({ message: 'Video not found.' });
-        }
-      }
-
-      const { likes, dislikes, newStatus } = computeUpdatedReactions(
-        video.likes,
-        video.dislikes,
-        currentStatus,
-        'like'
-      );
-
-      video.likes = likes;
-      video.dislikes = dislikes;
-      await video.save();
-
-      // Persist in User's liked/disliked lists in MongoDB
-      if (userId) {
-        if (newStatus === 'like') {
-          await User.findOneAndUpdate(
-            { userId },
-            { $addToSet: { likedVideos: videoId }, $pull: { dislikedVideos: videoId } }
-          );
-        } else if (newStatus === 'dislike') {
-          await User.findOneAndUpdate(
-            { userId },
-            { $addToSet: { dislikedVideos: videoId }, $pull: { likedVideos: videoId } }
-          );
-        } else {
-          await User.findOneAndUpdate(
-            { userId },
-            { $pull: { likedVideos: videoId, dislikedVideos: videoId } }
-          );
-        }
-      }
-
-      // Update local db interactions and videos
-      const interactionKey = userId ? `${userId}_${videoId}` : videoId;
-      if (newStatus) {
-        db.interactions[interactionKey] = newStatus;
-        db.interactions[videoId] = newStatus;
-      } else {
-        delete db.interactions[interactionKey];
-        delete db.interactions[videoId];
-      }
-
-      const dbVid = db.videos.find((v) => v.videoId === videoId);
-      if (dbVid) {
-        dbVid.likes = likes;
-        dbVid.dislikes = dislikes;
-      }
-      saveDB();
-
-      return res.json({ video, userStatus: newStatus });
-    }
-
-    const video = db.videos.find((v) => v.videoId === videoId);
-    if (!video) return res.status(404).json({ message: 'Video not found.' });
-
-    const { likes, dislikes, newStatus } = computeUpdatedReactions(
-      video.likes,
-      video.dislikes,
-      currentStatus,
-      'like'
-    );
-
-    video.likes = likes;
-    video.dislikes = dislikes;
-
-    const interactionKey = userId ? `${userId}_${videoId}` : videoId;
-    if (newStatus) {
-      db.interactions[interactionKey] = newStatus;
-      db.interactions[videoId] = newStatus;
-    } else {
-      delete db.interactions[interactionKey];
-      delete db.interactions[videoId];
-    }
-
-    saveDB();
-    return res.json({ video, userStatus: newStatus });
+    const userStatus = await resolveUserReactionStatus(id, userId, null, guestId);
+    return res.json({ videoId: id, userStatus });
   } catch (err) {
-    console.error('Like video error:', err);
-    return res.status(500).json({ message: 'Internal server error liking video.' });
+    console.error('Fetch interaction error:', err);
+    return res.status(500).json({ message: 'Internal server error fetching interaction.' });
   }
 });
 
 /**
- * POST /api/videos/:id/dislike
- * Toggles the 'dislike' state for a video and synchronizes engagement metrics in MongoDB.
+ * GET /api/videos/user-interactions/:userId
+ * Returns all liked and disliked video IDs for a user.
  */
-router.post('/:id/dislike', optionalAuth, async (req, res) => {
-  const videoId = req.params.id;
-  const userId = req.user?.userId || req.body.userId || req.body.user?.userId || null;
-  const clientStatus = req.body.currentStatus;
-
+router.get('/user-interactions/:userId', optionalAuth, async (req, res) => {
+  const { userId } = req.params;
   try {
-    const db = getDB();
-    let currentStatus = null;
-
-    if (clientStatus !== undefined && clientStatus !== null) {
-      currentStatus = clientStatus;
-    } else if (userId && isMongoConnected()) {
+    if (isMongoConnected()) {
       const user = await User.findOne({ userId });
       if (user) {
-        if (Array.isArray(user.likedVideos) && user.likedVideos.includes(videoId)) {
-          currentStatus = 'like';
-        } else if (Array.isArray(user.dislikedVideos) && user.dislikedVideos.includes(videoId)) {
-          currentStatus = 'dislike';
-        }
+        return res.json({
+          userId,
+          likedVideos: user.likedVideos || [],
+          dislikedVideos: user.dislikedVideos || []
+        });
       }
     }
-
-    if (!currentStatus) {
-      const interactionKey = userId ? `${userId}_${videoId}` : videoId;
-      currentStatus = db.interactions[interactionKey] || db.interactions[videoId] || null;
-    }
-
-    if (isMongoConnected()) {
-      let video = await Video.findOne({ videoId });
-      if (!video) {
-        const localVid = db.videos.find((v) => v.videoId === videoId);
-        if (localVid) {
-          video = new Video(localVid);
-          await video.save();
-        } else {
-          return res.status(404).json({ message: 'Video not found.' });
-        }
-      }
-
-      const { likes, dislikes, newStatus } = computeUpdatedReactions(
-        video.likes,
-        video.dislikes,
-        currentStatus,
-        'dislike'
-      );
-
-      video.likes = likes;
-      video.dislikes = dislikes;
-      await video.save();
-
-      // Persist in User's liked/disliked lists in MongoDB
-      if (userId) {
-        if (newStatus === 'like') {
-          await User.findOneAndUpdate(
-            { userId },
-            { $addToSet: { likedVideos: videoId }, $pull: { dislikedVideos: videoId } }
-          );
-        } else if (newStatus === 'dislike') {
-          await User.findOneAndUpdate(
-            { userId },
-            { $addToSet: { dislikedVideos: videoId }, $pull: { likedVideos: videoId } }
-          );
-        } else {
-          await User.findOneAndUpdate(
-            { userId },
-            { $pull: { likedVideos: videoId, dislikedVideos: videoId } }
-          );
-        }
-      }
-
-      const interactionKey = userId ? `${userId}_${videoId}` : videoId;
-      if (newStatus) {
-        db.interactions[interactionKey] = newStatus;
-        db.interactions[videoId] = newStatus;
-      } else {
-        delete db.interactions[interactionKey];
-        delete db.interactions[videoId];
-      }
-
-      const dbVid = db.videos.find((v) => v.videoId === videoId);
-      if (dbVid) {
-        dbVid.likes = likes;
-        dbVid.dislikes = dislikes;
-      }
-      saveDB();
-
-      return res.json({ video, userStatus: newStatus });
-    }
-
-    const video = db.videos.find((v) => v.videoId === videoId);
-    if (!video) return res.status(404).json({ message: 'Video not found.' });
-
-    const { likes, dislikes, newStatus } = computeUpdatedReactions(
-      video.likes,
-      video.dislikes,
-      currentStatus,
-      'dislike'
-    );
-
-    video.likes = likes;
-    video.dislikes = dislikes;
-
-    const interactionKey = userId ? `${userId}_${videoId}` : videoId;
-    if (newStatus) {
-      db.interactions[interactionKey] = newStatus;
-      db.interactions[videoId] = newStatus;
-    } else {
-      delete db.interactions[interactionKey];
-      delete db.interactions[videoId];
-    }
-
-    saveDB();
-    return res.json({ video, userStatus: newStatus });
+    const db = getDB();
+    const dbUser = db.users?.find((u) => u.userId === userId);
+    return res.json({
+      userId,
+      likedVideos: dbUser?.likedVideos || [],
+      dislikedVideos: dbUser?.dislikedVideos || []
+    });
   } catch (err) {
-    console.error('Dislike video error:', err);
-    return res.status(500).json({ message: 'Internal server error disliking video.' });
+    console.error('Fetch user interactions error:', err);
+    return res.status(500).json({ message: 'Internal server error fetching user interactions.' });
   }
+});
+
+/**
+ * POST /api/videos/:id/like
+ * Toggles the 'like' state for a video and synchronizes engagement metrics for the specific user.
+ */
+router.post('/:id/like', optionalAuth, async (req, res) => {
+  return handleVideoReaction(req, res, 'like');
+});
+
+/**
+ * POST /api/videos/:id/dislike
+ * Toggles the 'dislike' state for a video and synchronizes engagement metrics for the specific user.
+ */
+router.post('/:id/dislike', optionalAuth, async (req, res) => {
+  return handleVideoReaction(req, res, 'dislike');
 });
 
 /**

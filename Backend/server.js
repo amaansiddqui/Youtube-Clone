@@ -10,6 +10,10 @@ import channelRoutes from './routes/channelRoutes.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
 // Setup persistence layers:
 // 1. JSON file/in-memory cache for fast local access and offline fallback
 // 2. MongoDB connection if a Mongo server is running (with auto-seeding)

@@ -8,7 +8,12 @@
       "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
       "channels": [
         "channel01"
-      ]
+      ],
+      "likedVideos": [
+        "video01",
+        "video_1788770915130_bteq"
+      ],
+      "dislikedVideos": []
     },
     {
       "userId": "user_1788770422806",
@@ -111,7 +116,7 @@
       "uploader": "Code with Amaan",
       "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Amaan___&backgroundColor=cc0000,0073e6,2ba640",
       "views": 0,
-      "likes": 1,
+      "likes": 2,
       "dislikes": 0,
       "uploadDate": "2026-09-07T08:48:35.142Z",
       "comments": [
@@ -121,16 +126,18 @@
           "userId": "guest_1788771460592",
           "author": "You",
           "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
-          "text": "nice Cousre",
+          "text": "nice course",
           "timestamp": "2026-09-07T08:57:40.593Z",
-          "likes": 0
+          "likes": 0,
+          "isEdited": true,
+          "editedAt": "2026-09-07T15:24:05.960Z"
         }
       ]
     },
     {
       "videoId": "video01",
       "title": "Learn React in 30 Minutes",
-      "thumbnailUrl": "https://fiverr-res.cloudinary.com/images/t_main1,q_auto,f_auto,q_auto,f_auto/gigs/361654051/original/4d346061de746c0945c747204bcf70caf7cf1a0b/create-youtube-thumbnail-in-3-hours.png",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1280&q=80",
       "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
       "description": "A quick tutorial to get started with React.",
       "channelId": "channel01",
@@ -138,7 +145,7 @@
       "uploader": "user01",
       "subscribers": "5.2K",
       "views": 15200,
-      "likes": 1023,
+      "likes": 1027,
       "dislikes": 45,
       "uploadDate": "2024-09-20",
       "duration": "30:15",
@@ -154,20 +161,21 @@
           "timestamp": "2024-09-21T08:30:00Z",
           "likes": 38
         }
-      ]
+      ],
+      "updatedAt": "2026-09-07T15:23:27.653Z"
     },
     {
       "videoId": "video02",
       "title": "Build and Deploy a Full Stack YouTube Clone with React & Tailwind",
       "thumbnailUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1280&q=80",
-      "videoUrl": "https://vjs.zencdn.net/v/oceans.mp4",
+      "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
       "description": "Learn how to build a complete YouTube UI clone from scratch using React, modern CSS Grid, Flexbox, responsive design principles, and custom video player integration.",
       "channelId": "channel01",
       "channelName": "Code with John",
       "uploader": "Code with John",
       "subscribers": "5.2K",
       "views": 89400,
-      "likes": 4210,
+      "likes": 4209,
       "dislikes": 110,
       "uploadDate": "2024-08-15",
       "duration": "1:15:20",
@@ -202,7 +210,18 @@
       "duration": "18:04",
       "category": "JavaScript",
       "avatarUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
-      "comments": []
+      "comments": [
+        {
+          "commentId": "c_1788789427590_e68lk",
+          "videoId": "video03",
+          "userId": "user01",
+          "author": "You",
+          "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
+          "text": "Nice tutorial!",
+          "timestamp": "2026-09-07T13:57:07.590Z",
+          "likes": 0
+        }
+      ]
     },
     {
       "videoId": "video04",
@@ -226,11 +245,14 @@
   ],
   "interactions": {
     "user_1788770444708_video_http_1788770444778": "like",
-    "video_http_1788770444778": "like",
     "user_1788717733264_video02": "like",
-    "video02": "like",
     "user_1788717733264_video_1788770915130_bteq": "like",
-    "video_1788770915130_bteq": "like"
+    "user_1788717733264_video_1788773475936_6hsq": "like",
+    "user01_video_1788770915130_bteq": "like",
+    "guest_p8uiayb_video01": "like",
+    "guest_zlt0k5t_video01": "like",
+    "user_1788717733264_video01": "like",
+    "user01_video01": "like"
   },
   "subscriptions": {}
 }

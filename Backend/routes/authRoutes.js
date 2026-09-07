@@ -16,7 +16,7 @@ function isMongoConnected() {
 }
 
 /**
- * Helper: Validates user password.
+ * Validates user password.
  * In production with real hashing, this would call bcrypt.compare().
  * For this demo clone, we compare direct strings, with a friendly fallback
  * for the demo seed account (John Doe).
@@ -33,7 +33,7 @@ function verifyPassword(storedPassword, providedPassword, userEmail) {
 }
 
 /**
- * Helper: Creates a signed JWT token containing safe public user claims.
+ * Creates a signed JWT token containing safe public user claims.
  */
 function createAuthToken(user) {
   return jwt.sign(
@@ -49,7 +49,7 @@ function createAuthToken(user) {
 }
 
 /**
- * Helper: Returns a sanitized user object without sensitive fields like password.
+ * Returns a sanitized user object without sensitive fields like password.
  */
 function formatUserResponse(user) {
   return {
@@ -57,7 +57,9 @@ function formatUserResponse(user) {
     username: user.username,
     email: user.email,
     avatar: user.avatar,
-    channels: user.channels || []
+    channels: user.channels || [],
+    likedVideos: user.likedVideos || [],
+    dislikedVideos: user.dislikedVideos || []
   };
 }
 
@@ -87,8 +89,17 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ message: 'Password must be at least 4 characters long.' });
   }
 
+  // Username validation
+  if (trimmedUsername.length < 3) {
+    return res.status(400).json({ message: 'Username must be at least 3 characters long.' });
+  }
+
+  if (trimmedUsername.length > 30) {
+    return res.status(400).json({ message: 'Username cannot exceed 30 characters.' });
+  }
+
   try {
-    // 1. Handle MongoDB persistence if available
+    // Handle MongoDB persistence if available
     if (isMongoConnected()) {
       const existing = await User.findOne({
         $or: [{ email: emailLower }, { username: trimmedUsername }]
@@ -117,7 +128,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // 2. Fallback to in-memory / JSON database
+    // Fallback to in-memory / JSON database
     const db = getDB();
     const existing = db.users.find(
       (u) => u.email.toLowerCase() === emailLower || u.username.toLowerCase() === trimmedUsername.toLowerCase()
@@ -134,7 +145,9 @@ router.post('/register', async (req, res) => {
       email: emailLower,
       password,
       avatar: defaultAvatar,
-      channels: [`channel_${Date.now()}`]
+      channels: [`channel_${Date.now()}`],
+      likedVideos: [],
+      dislikedVideos: []
     };
 
     db.users.push(newUser);
@@ -166,7 +179,7 @@ router.post('/login', async (req, res) => {
   const idLower = identity.trim().toLowerCase();
 
   try {
-    // 1. Check MongoDB if active
+    // Check MongoDB if active
     if (isMongoConnected()) {
       const user = await User.findOne({
         $or: [{ email: idLower }, { username: new RegExp(`^${idLower}$`, 'i') }]
@@ -183,7 +196,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 2. Check JSON database fallback
+    // Check JSON database fallback
     const db = getDB();
     const user = db.users.find(
       (u) =>

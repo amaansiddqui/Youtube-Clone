@@ -36,28 +36,30 @@ export async function connectDB() {
  */
 async function seedDatabaseIfNeeded() {
   try {
-    // 1. Seed Users if empty
+    //  Seed Users if empty
     const userCount = await User.countDocuments();
     if (userCount === 0) {
       await User.insertMany(initialUsers);
       console.log('Seeded initial Users into MongoDB collection');
     }
 
-    // 2. Seed Channels if empty
+    // Seed Channels if empty
     const channelCount = await Channel.countDocuments();
     if (channelCount === 0) {
       await Channel.insertMany(initialChannels);
       console.log('Seeded initial Channels into MongoDB collection');
     }
 
-    // 3. Seed Videos if empty
+    // Seed Videos if empty
     const videoCount = await Video.countDocuments();
     if (videoCount === 0) {
       await Video.insertMany(initialVideos);
       console.log('Seeded initial Videos into MongoDB collection with file metadata');
     } else {
-      // Auto-heal existing collection: update any legacy unplayable media.w3.org URLs
-      const brokenVideos = await Video.find({ videoUrl: { $regex: 'media\\.w3\\.org' } });
+      // Auto-heal known demo URLs that are no longer reliably playable.
+      const brokenVideos = await Video.find({
+        videoUrl: { $regex: 'media\\.w3\\.org|vjs\\.zencdn\\.net/v/oceans\\.mp4' }
+      });
       if (brokenVideos.length > 0) {
         const freshMap = new Map(initialVideos.map((iv) => [iv.videoId, iv.videoUrl]));
         for (const bv of brokenVideos) {
@@ -88,7 +90,7 @@ async function seedDatabaseIfNeeded() {
       await Channel.deleteMany({ channelId: { $in: legacyChannelIds } });
     }
 
-    // 4. Seed Comments collection from initial videos comments
+    // Seed Comments collection from initial videos comments
     const commentCount = await Comment.countDocuments();
     if (commentCount === 0) {
       const allComments = [];
