@@ -2,7 +2,7 @@ export const initialVideos = [
   {
     videoId: "video01",
     title: "Learn React in 30 Minutes",
-    thumbnailUrl: "https://fiverr-res.cloudinary.com/images/t_main1,q_auto,f_auto,q_auto,f_auto/gigs/361654051/original/4d346061de746c0945c747204bcf70caf7cf1a0b/create-youtube-thumbnail-in-3-hours.png",
+    thumbnailUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1280&q=80",
     videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
     description: "A quick tutorial to get started with React.",
     channelId: "channel01",
@@ -32,7 +32,7 @@ export const initialVideos = [
     videoId: "video02",
     title: "Build and Deploy a Full Stack YouTube Clone with React & Tailwind",
     thumbnailUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1280&q=80",
-    videoUrl: "https://vjs.zencdn.net/v/oceans.mp4",
+    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
     description: "Learn how to build a complete YouTube UI clone from scratch using React, modern CSS Grid, Flexbox, responsive design principles, and custom video player integration.\n\nFeatures included:\n- Responsive YouTube Navigation & Mini Sidebar\n- Video Player with Like / Dislike interactions\n- Real-time Comment section (Add, Edit, Delete)\n- Category filtering & Search system\n- Persistent storage with mock database layer",
     channelId: "channel02",
     channelName: "DevMastery",

@@ -1,8 +1,37 @@
 import { allVideos } from '../data/sampleVideos';
+import { getCurrentUser, updateUserStoredInteractions } from './auth';
 
 const STORAGE_VIDEOS_KEY = 'yt_videos_database_v2';
 const STORAGE_INTERACTIONS_KEY = 'yt_user_video_interactions';
 const STORAGE_SUBSCRIPTIONS_KEY = 'yt_channel_subscriptions';
+const STORAGE_GUEST_ID_KEY = 'yt_guest_client_id';
+
+/**
+ * Resolves an active user key (user ID or unique guest ID) so that
+ * each user's likes/dislikes remain completely isolated.
+ */
+export function getActiveUserKey(userOrId = null) {
+  if (typeof userOrId === 'string' && userOrId.trim()) {
+    return userOrId.trim();
+  }
+  if (userOrId && typeof userOrId === 'object' && userOrId.userId) {
+    return userOrId.userId;
+  }
+  const current = getCurrentUser();
+  if (current?.userId) {
+    return current.userId;
+  }
+  try {
+    let guestId = localStorage.getItem(STORAGE_GUEST_ID_KEY);
+    if (!guestId) {
+      guestId = `guest_${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem(STORAGE_GUEST_ID_KEY, guestId);
+    }
+    return guestId;
+  } catch {
+    return 'guest_user';
+  }
+}
 
 // Helper to notify other components of database changes
 function emitVideoUpdate(videoId) {
@@ -36,15 +65,20 @@ export function getVideos() {
 
     let cacheUpdated = prunedVideos.length !== parsed.length;
 
-    // Auto-heal legacy cache: if stored entries contain unplayable media.w3.org URLs,
-    // seamlessly update them with the verified playable URLs from allVideos.
+    // Keep cached seed videos aligned with the current known playable URLs.
     const freshUrlMap = new Map(allVideos.map((v) => [v.videoId, v.videoUrl]));
+    const freshThumbnailMap = new Map(allVideos.map((v) => [v.videoId, v.thumbnailUrl]));
     const healedVideos = prunedVideos.map((v) => {
-      if (v.videoUrl && v.videoUrl.includes('media.w3.org') && freshUrlMap.has(v.videoId)) {
+      let healedVideo = v;
+      if (freshUrlMap.has(v.videoId) && v.videoUrl !== freshUrlMap.get(v.videoId)) {
         cacheUpdated = true;
-        return { ...v, videoUrl: freshUrlMap.get(v.videoId) };
+        healedVideo = { ...healedVideo, videoUrl: freshUrlMap.get(v.videoId) };
       }
-      return v;
+      if (freshThumbnailMap.has(v.videoId) && v.thumbnailUrl !== freshThumbnailMap.get(v.videoId)) {
+        cacheUpdated = true;
+        healedVideo = { ...healedVideo, thumbnailUrl: freshThumbnailMap.get(v.videoId) };
+      }
+      return healedVideo;
     });
 
     // Auto-sync video01 sample data if title is outdated
@@ -214,9 +248,58 @@ export function saveInteractionsMap(map) {
   }
 }
 
-export function getUserVideoInteraction(videoId) {
+export function getUserVideoInteraction(videoId, userOrId = null) {
+  if (!videoId) return null;
+  const userKey = getActiveUserKey(userOrId);
+  const scopedKey = `${userKey}_${videoId}`;
   const map = getInteractionsMap();
-  return map[videoId] || null; // 'like' | 'dislike' | null
+
+  if (map[scopedKey] !== undefined) {
+    return map[scopedKey];
+  }
+
+  // Also check if user document in localStorage has this video in liked/disliked lists
+  if (!userKey.startsWith('guest_')) {
+    try {
+      const rawUsers = localStorage.getItem('yt_registered_users');
+      if (rawUsers) {
+        const users = JSON.parse(rawUsers);
+        const user = users.find((u) => u.userId === userKey);
+        if (user) {
+          if (Array.isArray(user.likedVideos) && user.likedVideos.includes(videoId)) {
+            return 'like';
+          }
+          if (Array.isArray(user.dislikedVideos) && user.dislikedVideos.includes(videoId)) {
+            return 'dislike';
+          }
+        }
+      }
+    } catch {
+      // Ignore malformed stored user data.
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Explicitly sets or cleans a user's interaction in local storage.
+ */
+export function setUserVideoInteraction(videoId, userOrId, status) {
+  if (!videoId) return;
+  const userKey = getActiveUserKey(userOrId);
+  const scopedKey = `${userKey}_${videoId}`;
+  const interactions = getInteractionsMap();
+
+  if (status) {
+    interactions[scopedKey] = status;
+  } else {
+    delete interactions[scopedKey];
+  }
+  delete interactions[videoId]; // Clean legacy unscoped key
+
+  saveInteractionsMap(interactions);
+  updateUserStoredInteractions(userKey, videoId, status);
 }
 
 /**
@@ -263,16 +346,18 @@ function computeUpdatedReactions(currentLikes, currentDislikes, currentStatus, a
 }
 
 /**
- * Toggle like for a video and update counts in local database.
+ * Toggle like for a video and update counts in local database for the active user.
  */
-export function toggleVideoLike(videoId) {
+export function toggleVideoLike(videoId, userOrId = null) {
   const videos = getVideos();
   const videoIndex = videos.findIndex((v) => v.videoId === videoId);
   if (videoIndex === -1) return null;
 
   const targetVideo = { ...videos[videoIndex] };
+  const userKey = getActiveUserKey(userOrId);
+  const scopedKey = `${userKey}_${videoId}`;
   const interactions = getInteractionsMap();
-  const currentStatus = interactions[videoId] || null;
+  const currentStatus = getUserVideoInteraction(videoId, userKey);
 
   const { likes, dislikes, newStatus } = computeUpdatedReactions(
     targetVideo.likes,
@@ -286,11 +371,13 @@ export function toggleVideoLike(videoId) {
   videos[videoIndex] = targetVideo;
 
   if (newStatus) {
-    interactions[videoId] = newStatus;
+    interactions[scopedKey] = newStatus;
   } else {
-    delete interactions[videoId];
+    delete interactions[scopedKey];
   }
+  delete interactions[videoId]; // Clean legacy unscoped key
 
+  updateUserStoredInteractions(userKey, videoId, newStatus);
   saveVideos(videos);
   saveInteractionsMap(interactions);
   emitVideoUpdate(videoId);
@@ -299,16 +386,18 @@ export function toggleVideoLike(videoId) {
 }
 
 /**
- * Toggle dislike for a video and update counts in local database.
+ * Toggle dislike for a video and update counts in local database for the active user.
  */
-export function toggleVideoDislike(videoId) {
+export function toggleVideoDislike(videoId, userOrId = null) {
   const videos = getVideos();
   const videoIndex = videos.findIndex((v) => v.videoId === videoId);
   if (videoIndex === -1) return null;
 
   const targetVideo = { ...videos[videoIndex] };
+  const userKey = getActiveUserKey(userOrId);
+  const scopedKey = `${userKey}_${videoId}`;
   const interactions = getInteractionsMap();
-  const currentStatus = interactions[videoId] || null;
+  const currentStatus = getUserVideoInteraction(videoId, userKey);
 
   const { likes, dislikes, newStatus } = computeUpdatedReactions(
     targetVideo.likes,
@@ -322,11 +411,13 @@ export function toggleVideoDislike(videoId) {
   videos[videoIndex] = targetVideo;
 
   if (newStatus) {
-    interactions[videoId] = newStatus;
+    interactions[scopedKey] = newStatus;
   } else {
-    delete interactions[videoId];
+    delete interactions[scopedKey];
   }
+  delete interactions[videoId]; // Clean legacy unscoped key
 
+  updateUserStoredInteractions(userKey, videoId, newStatus);
   saveVideos(videos);
   saveInteractionsMap(interactions);
   emitVideoUpdate(videoId);

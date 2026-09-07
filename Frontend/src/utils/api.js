@@ -13,7 +13,9 @@ import {
   getVideos as getLocalVideos,
   getVideoById as getLocalVideoById,
   getChannelSubscription as getLocalChannelSubscription,
-  getInteractionsMap
+  getUserVideoInteraction,
+  setUserVideoInteraction,
+  getActiveUserKey
 } from './videoService';
 
 import {
@@ -95,7 +97,11 @@ export const authAPI = {
         }
       }
       return data;
-    } catch {
+    } catch (err) {
+      // If the backend actively rejected with 4xx validation/auth error, throw that exact message
+      if (err.message && !err.message.includes('Failed to fetch') && !err.message.includes('NetworkError')) {
+        throw err;
+      }
       return loginLocalUser(credentials);
     }
   },
@@ -129,7 +135,11 @@ export const authAPI = {
         }
       }
       return data;
-    } catch {
+    } catch (err) {
+      // If the backend actively rejected with 4xx validation/duplicate error, throw that exact message
+      if (err.message && !err.message.includes('Failed to fetch') && !err.message.includes('NetworkError')) {
+        throw err;
+      }
       return registerLocalUser(userData);
     }
   },
@@ -180,13 +190,44 @@ export const videoAPI = {
 
   /**
    * Fetches a single video by ID.
+   * Attaches and synchronizes the calling user's reaction status.
    */
-  getVideoById: async (id) => {
+  getVideoById: async (id, user = null) => {
+    // User uploads are persisted locally first. A browser can retain an upload
+    // after the backend database has been reset, so avoid a guaranteed 404.
+    const localVideo = getLocalVideoById(id);
+    if (localVideo && id?.startsWith('video_')) {
+      return localVideo;
+    }
+
     try {
-      const data = await tryFetch(`/videos/${id}`);
-      return data.video || data;
+      const activeUser = user || getLocalCurrentUser();
+      const userParam = activeUser?.userId ? `?userId=${encodeURIComponent(activeUser.userId)}` : '';
+      const data = await tryFetch(`/videos/${id}${userParam}`);
+      const video = data.video || data;
+      if (video && data.userStatus !== undefined) {
+        setUserVideoInteraction(id, activeUser, data.userStatus);
+      }
+      return video;
     } catch {
-      return getLocalVideoById(id);
+      return localVideo;
+    }
+  },
+
+  /**
+   * Fetches user-specific reaction status for a video.
+   */
+  getVideoInteraction: async (id, user = null) => {
+    try {
+      const activeUser = user || getLocalCurrentUser();
+      const userParam = activeUser?.userId ? `?userId=${encodeURIComponent(activeUser.userId)}` : '';
+      const data = await tryFetch(`/videos/${id}/interaction${userParam}`);
+      if (data?.userStatus !== undefined) {
+        setUserVideoInteraction(id, activeUser, data.userStatus);
+      }
+      return data?.userStatus || null;
+    } catch {
+      return getUserVideoInteraction(id, user);
     }
   },
 
@@ -237,17 +278,25 @@ export const videoAPI = {
    * Passes currentStatus and user to prevent double-toggle and ensure exact reaction alignment.
    */
   likeVideo: async (id, currentStatus, user) => {
+    const activeKey = getActiveUserKey(user);
+    const isGuest = activeKey.startsWith('guest_');
     try {
       const data = await tryFetch(`/videos/${id}/like`, {
         method: 'POST',
-        body: JSON.stringify({ currentStatus, userId: user?.userId })
+        body: JSON.stringify({
+          currentStatus,
+          userId: user?.userId || (!isGuest ? activeKey : undefined),
+          guestId: isGuest ? activeKey.replace(/^guest_/, '') : undefined
+        })
       });
+      if (data?.userStatus !== undefined) {
+        setUserVideoInteraction(id, user, data.userStatus);
+      }
       return data;
     } catch {
-      // Offline / fallback: return existing local video without toggling again
+      // Offline / fallback: return existing local video with user's status
       const video = getLocalVideoById(id);
-      const interactions = getInteractionsMap();
-      return { video, userStatus: interactions[id] || null };
+      return { video, userStatus: getUserVideoInteraction(id, user) };
     }
   },
 
@@ -256,17 +305,25 @@ export const videoAPI = {
    * Passes currentStatus and user to prevent double-toggle and ensure exact reaction alignment.
    */
   dislikeVideo: async (id, currentStatus, user) => {
+    const activeKey = getActiveUserKey(user);
+    const isGuest = activeKey.startsWith('guest_');
     try {
       const data = await tryFetch(`/videos/${id}/dislike`, {
         method: 'POST',
-        body: JSON.stringify({ currentStatus, userId: user?.userId })
+        body: JSON.stringify({
+          currentStatus,
+          userId: user?.userId || (!isGuest ? activeKey : undefined),
+          guestId: isGuest ? activeKey.replace(/^guest_/, '') : undefined
+        })
       });
+      if (data?.userStatus !== undefined) {
+        setUserVideoInteraction(id, user, data.userStatus);
+      }
       return data;
     } catch {
-      // Offline / fallback: return existing local video without toggling again
+      // Offline / fallback: return existing local video with user's status
       const video = getLocalVideoById(id);
-      const interactions = getInteractionsMap();
-      return { video, userStatus: interactions[id] || null };
+      return { video, userStatus: getUserVideoInteraction(id, user) };
     }
   },
 

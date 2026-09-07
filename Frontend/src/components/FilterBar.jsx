@@ -8,7 +8,7 @@ import { useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectSelectedCategory, setSelectedCategory } from '../store/slices/videoSlice';
 
-
+// List of available video categories for selection
 const CATEGORIES = [
   'All',
   'React',

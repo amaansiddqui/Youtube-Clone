@@ -76,6 +76,7 @@ export default function ChannelPage({
     };
   }, [channelId]);
 
+  // Handle case where channel does not exist
   if (!channel) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-white">
@@ -102,6 +103,7 @@ export default function ChannelPage({
     );
   }
 
+  // Determine ownership and channel handle
   const isOwner = currentUser && currentUser.userId === channel.owner;
   const channelHandle = `@${channel.channelName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
   const bannerImage = getSafeBanner(channel.channelBanner);

@@ -28,6 +28,7 @@ export default function ManageVideosModal({
   const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Filter videos based on search term (title or category)
   const filteredVideos = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     if (!q) return videos;
@@ -38,6 +39,8 @@ export default function ManageVideosModal({
     );
   }, [videos, searchTerm]);
 
+
+    // If modal is not open or channel data is missing, do not render
   if (!isOpen || !channel) return null;
 
   const handleDelete = (video) => {
@@ -52,6 +55,8 @@ export default function ManageVideosModal({
     }
   };
 
+
+  // Render the modal with video management interface
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xs select-none">
       <div

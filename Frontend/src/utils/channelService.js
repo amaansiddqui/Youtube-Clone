@@ -3,6 +3,7 @@ import { getUsers, saveUsers } from './auth';
 
 const STORAGE_CHANNELS_KEY = 'yt_channels_database_v2';
 
+// intial Channels
 export const initialChannels = [
   {
     channelId: "channel01",

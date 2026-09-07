@@ -1,6 +1,5 @@
 /**
  * Main Application Component (YouTube Clone)
- * Orchestrates:
  * - Client-side history-based routing (/watch?v=..., /channel?id=..., /login, /)
  * - Redux state hydration & background event listeners for real-time updates
  * - View switching between Home feed, Video watch view, Channel profile, and Auth page

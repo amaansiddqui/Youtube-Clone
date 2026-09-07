@@ -76,7 +76,19 @@ export const DEFAULT_FALLBACK_THUMBNAILS = [
  * returns an attractive tech-themed fallback image.
  */
 export function getSafeThumbnail(url, index = 0) {
-  if (!url || typeof url !== 'string' || !url.trim() || url.includes('example.com') || url === 'undefined' || url === 'null') {
+  const blockedThumbnailHosts = [
+    'example.com',
+    'fiverr-res.cloudinary.com',
+    'vjs.zencdn.net'
+  ];
+  if (
+    !url ||
+    typeof url !== 'string' ||
+    !url.trim() ||
+    blockedThumbnailHosts.some((host) => url.includes(host)) ||
+    url === 'undefined' ||
+    url === 'null'
+  ) {
     const safeIdx = Math.abs(Number(index) || 0);
     return DEFAULT_FALLBACK_THUMBNAILS[safeIdx % DEFAULT_FALLBACK_THUMBNAILS.length];
   }

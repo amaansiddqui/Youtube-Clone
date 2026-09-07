@@ -22,6 +22,7 @@ export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const showSampleHint = true;
 
   const fillSampleUser = () => {
@@ -35,6 +36,23 @@ export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
     e.preventDefault();
     setError('');
 
+    // Pre-flight validation
+    if (mode === 'register') {
+      if (username.trim().length < 3) {
+        setError('Username must be at least 3 characters long.');
+        return;
+      }
+      if (!email.includes('@') || !email.includes('.')) {
+        setError('Please enter a valid email address.');
+        return;
+      }
+    }
+    if (password.length < 4) {
+      setError('Password must be at least 4 characters long.');
+      return;
+    }
+
+    setLoading(true);
     try {
       if (mode === 'login') {
         const res = await authAPI.login({
@@ -48,8 +66,8 @@ export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
         }
       } else {
         const res = await authAPI.register({
-          username,
-          email,
+          username: username.trim(),
+          email: email.trim(),
           password
         });
         const user = res.user || res;
@@ -59,7 +77,9 @@ export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
         }
       }
     } catch (err) {
-      setError(err.message || 'Authentication failed. Please try again.');
+      setError(err.message || 'Authentication failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,7 +155,7 @@ export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
             />
           </div>
 
-          {/* Quick sample credentials helper */}
+          {/* Quick sample credentials */}
           {showSampleHint && mode === 'login' && (
             <div className="google-sample-helper bg-[#4285f4]/10 border border-dashed border-[#4285f4]/40 rounded-xl p-3 flex flex-col gap-2">
               <div className="sample-tip-text text-xs text-[#8ab4f8] break-all">
@@ -177,8 +197,13 @@ export default function AuthPage({ onAuthSuccess, onNavigateHome }) {
               </button>
             )}
 
-            <button type="submit" className="google-primary-btn bg-[#8ab4f8] hover:bg-[#aecbfa] text-[#202124] px-6 py-2.5 rounded-full text-sm font-semibold transition-colors cursor-pointer border-none">
-              {mode === 'login' ? 'Next' : 'Register'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="google-primary-btn bg-[#8ab4f8] hover:bg-[#aecbfa] text-[#202124] px-6 py-2.5 rounded-full text-sm font-semibold transition-colors cursor-pointer border-none disabled:opacity-60 flex items-center gap-2"
+            >
+              {loading && <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />}
+              <span>{loading ? 'Please wait...' : mode === 'login' ? 'Next' : 'Register'}</span>
             </button>
           </div>
         </form>

@@ -23,6 +23,8 @@ export default function CreateChannelModal({
   const [bannerUrl, setBannerUrl] = useState(
     'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80'
   );
+
+  // Use current user's avatar as default if available
   const avatarUrl = currentUser?.avatar || '';
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,6 +35,7 @@ export default function CreateChannelModal({
     e.preventDefault();
     setError('');
 
+    // Pre-flight validation
     if (!currentUser) {
       setError('You must be signed in to create a channel.');
       return;
@@ -43,6 +46,7 @@ export default function CreateChannelModal({
       return;
     }
 
+    // Proceed with channel creation
     setIsSubmitting(true);
     try {
       const channelId = `channel_${Date.now()}`;

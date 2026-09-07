@@ -4,7 +4,7 @@
  * selected video details, and async thunks for video & comment operations.
  */
 
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import { videoAPI } from '../../utils/api';
 import { getVideos } from '../../utils/videoService';
 
@@ -22,9 +22,11 @@ export const fetchVideosThunk = createAsyncThunk(
 
 export const fetchVideoByIdThunk = createAsyncThunk(
   'videos/fetchVideoById',
-  async (videoId, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      return await videoAPI.getVideoById(videoId);
+      const videoId = typeof payload === 'string' ? payload : payload.videoId;
+      const user = typeof payload === 'object' ? payload.user : null;
+      return await videoAPI.getVideoById(videoId, user);
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -271,8 +273,9 @@ export const selectSelectedCategory = (state) => state.videos.selectedCategory;
 export const selectSearchQuery = (state) => state.videos.searchQuery;
 export const selectVideosLoading = (state) => state.videos.loading;
 
-export const selectFilteredVideos = (state) => {
-  const { videos, selectedCategory, searchQuery } = state.videos;
+export const selectFilteredVideos = createSelector(
+  [selectAllVideos, selectSelectedCategory, selectSearchQuery],
+  (videos, selectedCategory, searchQuery) => {
   const q = searchQuery.trim().toLowerCase();
 
   return videos.filter((video) => {
@@ -287,7 +290,8 @@ export const selectFilteredVideos = (state) => {
 
     return video.category?.toLowerCase() === selectedCategory.toLowerCase();
   });
-};
+  }
+);
 
 export const selectVideoById = (videoId) => (state) =>
   state.videos.videos.find((v) => v.videoId === videoId) || null;

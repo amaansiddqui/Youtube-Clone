@@ -625,9 +625,31 @@
   .yt-header-center {
     flex: 0 1 480px;
   }
+
+  .yt-video-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
+  .yt-header-left,
+  .yt-header-right {
+    min-width: 0;
+  }
+
+  .yt-header-center {
+    min-width: 0;
+    margin: 0 8px;
+  }
+
+  .yt-header-right {
+    gap: 2px;
+  }
+
+  .yt-sidebar-mini {
+    display: none;
+  }
+
   .yt-sidebar-overlay {
     display: block;
     position: fixed;
@@ -644,6 +666,7 @@
     top: 0;
     left: 0;
     height: 100vh;
+    width: min(var(--yt-sidebar-width), 85vw);
     z-index: 200;
     box-shadow: 4px 0 16px rgba(0, 0, 0, 0.5);
   }
@@ -663,6 +686,10 @@
   .yt-content-inner {
     padding: 16px;
   }
+
+  .yt-watch-page {
+    padding: 16px;
+  }
 }
 
 @media (max-width: 576px) {
@@ -680,8 +707,67 @@
     gap: 4px;
   }
 
+  .yt-header-center {
+    margin: 0 4px;
+  }
+
+  .yt-mic-btn {
+    display: none;
+  }
+
+  .yt-header-username,
+  .yt-signin-text {
+    display: none;
+  }
+
+  .yt-user-profile-btn {
+    padding-right: 4px;
+  }
+
+  .yt-search-input-wrapper {
+    padding: 0 12px;
+  }
+
+  .yt-search-submit-btn {
+    width: 48px;
+  }
+
   .yt-video-grid {
     grid-template-columns: 1fr;
+  }
+
+  .yt-channel-banner-wrapper,
+  .yt-channel-header-container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .yt-channel-banner-inner {
+    height: 92px;
+    border-radius: 10px;
+  }
+
+  .yt-channel-profile-row {
+    gap: 12px;
+  }
+
+  .yt-channel-actions-row {
+    gap: 8px;
+  }
+
+  .yt-owner-pill-btn,
+  .yt-owner-primary-btn,
+  .yt-subscribe-btn {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .yt-channel-video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  }
+
+  .yt-watch-page {
+    padding: 12px;
   }
 }
 
@@ -1345,7 +1431,7 @@
 /* Channel video card & grid */
 .yt-channel-video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 260px));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: 20px 16px;
 }
 

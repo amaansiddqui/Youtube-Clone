@@ -33,9 +33,11 @@ import {
   toggleVideoLike,
   toggleVideoDislike,
   getUserVideoInteraction,
+  setUserVideoInteraction,
   getChannelSubscription,
   toggleChannelSubscription
 } from '../utils/videoService';
+import { videoAPI } from '../utils/api';
 
 export default function VideoWatchPage({
   videoId,
@@ -46,7 +48,7 @@ export default function VideoWatchPage({
 }) {
   const dispatch = useDispatch();
   const [video, setVideo] = useState(() => getVideoById(videoId));
-  const [userStatus, setUserStatus] = useState(() => getUserVideoInteraction(videoId));
+  const [userStatus, setUserStatus] = useState(() => getUserVideoInteraction(videoId, currentUser));
   const [isSubscribed, setIsSubscribed] = useState(() => {
     const v = getVideoById(videoId);
     return v ? getChannelSubscription(v.channelId) : false;
@@ -60,6 +62,34 @@ export default function VideoWatchPage({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // Synchronize interaction state whenever active user or video changes
+  useEffect(() => {
+    setUserStatus(getUserVideoInteraction(videoId, currentUser));
+
+    let isMounted = true;
+    (async () => {
+      try {
+        const fresh = await videoAPI.getVideoById(videoId, currentUser);
+        if (isMounted && fresh) {
+          setVideo(fresh);
+          if (fresh.userStatus !== undefined) {
+            setUserStatus(fresh.userStatus);
+            setUserVideoInteraction(videoId, currentUser, fresh.userStatus);
+          }
+          if (fresh.channelId) {
+            setIsSubscribed(getChannelSubscription(fresh.channelId));
+          }
+        }
+      } catch {
+        // Fallback to local data
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [videoId, currentUser?.userId]);
+
   // Listen to database updates from videoService
   useEffect(() => {
     const handleDatabaseUpdate = (e) => {
@@ -70,20 +100,20 @@ export default function VideoWatchPage({
           setVideo(fresh);
           setIsSubscribed(getChannelSubscription(fresh.channelId));
         }
-        setUserStatus(getUserVideoInteraction(videoId));
+        setUserStatus(getUserVideoInteraction(videoId, currentUser));
       }
       setAllVideosList(getVideos());
     };
 
     window.addEventListener('yt-video-updated', handleDatabaseUpdate);
     return () => window.removeEventListener('yt-video-updated', handleDatabaseUpdate);
-  }, [videoId]);
+  }, [videoId, currentUser?.userId]);
 
   // Handle Likes
   const handleLikeClick = async () => {
     if (!video) return;
     const previousStatus = userStatus;
-    const result = toggleVideoLike(video.videoId);
+    const result = toggleVideoLike(video.videoId, currentUser);
     if (result) {
       setVideo(result.video);
       setUserStatus(result.userStatus);
@@ -103,6 +133,7 @@ export default function VideoWatchPage({
           }));
           if (res.userStatus !== undefined) {
             setUserStatus(res.userStatus);
+            setUserVideoInteraction(video.videoId, currentUser, res.userStatus);
           }
         }
       } catch {
@@ -115,7 +146,7 @@ export default function VideoWatchPage({
   const handleDislikeClick = async () => {
     if (!video) return;
     const previousStatus = userStatus;
-    const result = toggleVideoDislike(video.videoId);
+    const result = toggleVideoDislike(video.videoId, currentUser);
     if (result) {
       setVideo(result.video);
       setUserStatus(result.userStatus);
@@ -135,6 +166,7 @@ export default function VideoWatchPage({
           }));
           if (res.userStatus !== undefined) {
             setUserStatus(res.userStatus);
+            setUserVideoInteraction(video.videoId, currentUser, res.userStatus);
           }
         }
       } catch {

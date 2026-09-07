@@ -34,6 +34,7 @@ export default function CustomizeChannelModal({
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // If modal is not open or channel data is missing, do not render
   if (!isOpen || !channel) return null;
 
   const handleSubmit = (e) => {
@@ -45,6 +46,7 @@ export default function CustomizeChannelModal({
       return;
     }
 
+    // Proceed with channel update 
     setIsSubmitting(true);
     try {
       const fields = {

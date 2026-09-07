@@ -10,6 +10,7 @@ import { updateVideo } from '../utils/videoService';
 
 import { updateVideoThunk } from '../store/slices/videoSlice';
 
+// List of available video categories for selection
 const CATEGORIES = [
   'All',
   'React',

@@ -10,7 +10,9 @@ export const SAMPLE_USER = {
   email: "john@example.com",
   password: "hashedPassword123",
   avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
-  channels: ["channel01"]
+  channels: ["channel01"],
+  likedVideos: [],
+  dislikedVideos: []
 };
 
 // Local storage cache keys
@@ -155,7 +157,9 @@ export function registerUser({ username, email, password }) {
     email: emailLower,
     password: password,
     avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(trimmedUsername)}&backgroundColor=cc0000,0073e6,2ba640`,
-    channels: [`channel_${Date.now()}`]
+    channels: [`channel_${Date.now()}`],
+    likedVideos: [],
+    dislikedVideos: []
   };
 
   users.push(newUser);
@@ -231,6 +235,38 @@ export function getCurrentUser() {
     return decodeJWT(token);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Updates a user's stored liked/disliked lists in localStorage.
+ */
+export function updateUserStoredInteractions(userId, videoId, status) {
+  if (!userId || !videoId || userId.startsWith('guest_')) return;
+  try {
+    const users = getUsers();
+    const index = users.findIndex((u) => u.userId === userId);
+    if (index !== -1) {
+      const user = { ...users[index] };
+      if (!Array.isArray(user.likedVideos)) user.likedVideos = [];
+      if (!Array.isArray(user.dislikedVideos)) user.dislikedVideos = [];
+
+      if (status === 'like') {
+        if (!user.likedVideos.includes(videoId)) user.likedVideos.push(videoId);
+        user.dislikedVideos = user.dislikedVideos.filter((id) => id !== videoId);
+      } else if (status === 'dislike') {
+        if (!user.dislikedVideos.includes(videoId)) user.dislikedVideos.push(videoId);
+        user.likedVideos = user.likedVideos.filter((id) => id !== videoId);
+      } else {
+        user.likedVideos = user.likedVideos.filter((id) => id !== videoId);
+        user.dislikedVideos = user.dislikedVideos.filter((id) => id !== videoId);
+      }
+
+      users[index] = user;
+      saveUsers(users);
+    }
+  } catch (err) {
+    console.error('Error updating user stored interactions:', err);
   }
 }
 
