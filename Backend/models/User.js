@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
     avatar: { type: String, default: '' },
-    channels: [{ type: String }]
+    channels: [{ type: String }],
+    likedVideos: [{ type: String, default: [] }],
+    dislikedVideos: [{ type: String, default: [] }]
   },
   { timestamps: true }
 );

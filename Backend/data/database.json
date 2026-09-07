@@ -1,0 +1,264 @@
+{
+  "users": [
+    {
+      "userId": "user01",
+      "username": "JohnDoe",
+      "email": "john@example.com",
+      "password": "hashedPassword123",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
+      "channels": [
+        "channel01"
+      ]
+    },
+    {
+      "userId": "user_1788770422806",
+      "username": "user_1788770422763",
+      "email": "user_1788770422763@example.com",
+      "password": "password123",
+      "avatar": "https://api.dicebear.com/7.x/initials/svg?seed=user_1788770422763&backgroundColor=cc0000,0073e6,2ba640",
+      "channels": [
+        "channel_1788770422806"
+      ],
+      "likedVideos": [],
+      "dislikedVideos": []
+    },
+    {
+      "userId": "user_1788770444708",
+      "username": "user_1788770444675",
+      "email": "user_1788770444675@example.com",
+      "password": "password123",
+      "avatar": "https://api.dicebear.com/7.x/initials/svg?seed=user_1788770444675&backgroundColor=cc0000,0073e6,2ba640",
+      "channels": [
+        "channel_1788770444708"
+      ],
+      "likedVideos": [],
+      "dislikedVideos": []
+    }
+  ],
+  "channels": [
+    {
+      "channelId": "channel01",
+      "channelName": "Code with John",
+      "owner": "user01",
+      "description": "Coding tutorials and tech reviews by John !!",
+      "channelBanner": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1600&q=80",
+      "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
+      "subscribers": 5200,
+      "videos": [
+        "video01",
+        "video02"
+      ],
+      "createdAt": "2024-01-15T00:00:00.000Z",
+      "updatedAt": "2026-09-07T09:25:43.821Z"
+    },
+    {
+      "channelId": "channel02",
+      "channelName": "DevMastery",
+      "owner": "user02",
+      "description": "Learn how to build complete full-stack web applications and UI clones.",
+      "channelBanner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
+      "avatarUrl": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=160&q=80",
+      "subscribers": 1420000,
+      "videos": [
+        "video02"
+      ],
+      "createdAt": "2023-11-20T00:00:00.000Z"
+    },
+    {
+      "channelId": "channel03",
+      "channelName": "JS Wizards",
+      "owner": "user03",
+      "description": "Modern JavaScript deep dives, clean architecture, and frontend performance.",
+      "channelBanner": "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?auto=format&fit=crop&w=1600&q=80",
+      "avatarUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80",
+      "subscribers": 620000,
+      "videos": [
+        "video03"
+      ],
+      "createdAt": "2023-08-10T00:00:00.000Z"
+    },
+    {
+      "channelId": "channel_1788770857034",
+      "channelName": "Code with Amaan",
+      "owner": "user_1788717733264",
+      "description": "Welcome to Code with Amaan! Official channel for videos, tutorials, and community updates.",
+      "channelBanner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
+      "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Amaan___&backgroundColor=cc0000,0073e6,2ba640",
+      "subscribers": 0,
+      "videos": [
+        "video_1788770915130_bteq",
+        "video_1788773475936_6hsq"
+      ],
+      "createdAt": "2026-09-07T08:47:37.213Z"
+    }
+  ],
+  "videos": [
+    {
+      "videoId": "video_1788773475936_6hsq",
+      "title": "Energetic music",
+      "description": "Feel the music !!",
+      "category": "Music",
+      "thumbnailUrl": "https://resource.designwiz.com/designwiz/compressed/energetic-live-music-performance-experience-youtube-thumbnail-template-dasb3b1ca662dd.jpg",
+      "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
+      "duration": "10:00",
+      "fileMetadata": {
+        "format": "mp4",
+        "size": 10485760,
+        "mimeType": "video/mp4",
+        "resolution": "1080p"
+      },
+      "channelId": "channel_1788770857034",
+      "channelName": "Code with Amaan",
+      "uploader": "Code with Amaan",
+      "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Amaan___&backgroundColor=cc0000,0073e6,2ba640",
+      "views": 0,
+      "likes": 0,
+      "dislikes": 0,
+      "uploadDate": "2026-09-07T09:31:15.945Z",
+      "comments": []
+    },
+    {
+      "videoId": "video_1788770915130_bteq",
+      "title": "Full Stack Course",
+      "description": "",
+      "category": "JavaScript",
+      "thumbnailUrl": "https://www.bdtask.com/blog/uploads/how-to-be-a-full-stack-developer.jpg",
+      "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
+      "duration": "10:00",
+      "fileMetadata": {
+        "format": "mp4",
+        "size": 10485760,
+        "mimeType": "video/mp4",
+        "resolution": "1080p"
+      },
+      "channelId": "channel_1788770857034",
+      "channelName": "Code with Amaan",
+      "uploader": "Code with Amaan",
+      "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Amaan___&backgroundColor=cc0000,0073e6,2ba640",
+      "views": 0,
+      "likes": 1,
+      "dislikes": 0,
+      "uploadDate": "2026-09-07T08:48:35.142Z",
+      "comments": [
+        {
+          "commentId": "c_1788771460583_xc5wu",
+          "videoId": "video_1788770915130_bteq",
+          "userId": "guest_1788771460592",
+          "author": "You",
+          "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
+          "text": "nice Cousre",
+          "timestamp": "2026-09-07T08:57:40.593Z",
+          "likes": 0
+        }
+      ]
+    },
+    {
+      "videoId": "video01",
+      "title": "Learn React in 30 Minutes",
+      "thumbnailUrl": "https://fiverr-res.cloudinary.com/images/t_main1,q_auto,f_auto,q_auto,f_auto/gigs/361654051/original/4d346061de746c0945c747204bcf70caf7cf1a0b/create-youtube-thumbnail-in-3-hours.png",
+      "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
+      "description": "A quick tutorial to get started with React.",
+      "channelId": "channel01",
+      "channelName": "Code with John",
+      "uploader": "Code with John",
+      "subscribers": "5.2K",
+      "views": 15200,
+      "likes": 1023,
+      "dislikes": 45,
+      "uploadDate": "2024-09-20",
+      "duration": "30:15",
+      "category": "React",
+      "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
+      "comments": [
+        {
+          "commentId": "comment01",
+          "userId": "user02",
+          "author": "Sarah Connor",
+          "avatarUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
+          "text": "Great video! Very helpful.",
+          "timestamp": "2024-09-21T08:30:00Z",
+          "likes": 38
+        }
+      ],
+      "updatedAt": "2026-09-07T09:24:03.190Z"
+    },
+    {
+      "videoId": "video02",
+      "title": "Build and Deploy a Full Stack YouTube Clone with React & Tailwind",
+      "thumbnailUrl": "https://s3-alpha.figma.com/hub/file/1803556575/dddad4ab-afbe-4c4b-bfbd-5f872db64b12-cover.png",
+      "videoUrl": "https://vjs.zencdn.net/v/oceans.mp4",
+      "description": "Learn how to build a complete YouTube UI clone from scratch using React, modern CSS Grid, Flexbox, responsive design principles, and custom video player integration.\n\nFeatures included:\n- Responsive YouTube Navigation & Mini Sidebar\n- Video Player with Like / Dislike interactions\n- Real-time Comment section (Add, Edit, Delete)\n- Category filtering & Search system\n- Persistent storage with mock database layer",
+      "channelId": "channel01",
+      "channelName": "Code with John",
+      "uploader": "Code with John",
+      "subscribers": "5.2K",
+      "views": 89400,
+      "likes": 4210,
+      "dislikes": 110,
+      "uploadDate": "2024-08-15",
+      "duration": "1:15:20",
+      "category": "React",
+      "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
+      "comments": [
+        {
+          "commentId": "comment02_1",
+          "userId": "user04",
+          "author": "Michael Scott",
+          "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80",
+          "text": "This clone tutorial is pure gold! The comment section functionality is spot on.",
+          "timestamp": "2024-08-16T10:12:00Z",
+          "likes": 72
+        }
+      ],
+      "updatedAt": "2026-09-07T09:24:15.377Z"
+    },
+    {
+      "videoId": "video03",
+      "title": "JavaScript Pro Tips: 10 Hidden Features You Need to Know",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?auto=format&fit=crop&w=1280&q=80",
+      "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+      "description": "Level up your modern JavaScript knowledge with clean code practices, optional chaining, structuredClone, async generators, and performance tricks.",
+      "channelId": "channel03",
+      "channelName": "JS Wizards",
+      "uploader": "JS Wizards",
+      "subscribers": "620K",
+      "views": 342100,
+      "likes": 18450,
+      "dislikes": 320,
+      "uploadDate": "2024-07-02",
+      "duration": "18:04",
+      "category": "JavaScript",
+      "avatarUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
+      "comments": []
+    },
+    {
+      "videoId": "video04",
+      "title": "JavaScript Pro Tips: 10 Hidden Features You Need to Know",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?auto=format&fit=crop&w=1280&q=80",
+      "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+      "description": "Level up your modern JavaScript knowledge with clean code practices, optional chaining, structuredClone, async generators, and performance tricks.",
+      "channelId": "channel03",
+      "channelName": "JS Wizards",
+      "uploader": "JS Wizards",
+      "subscribers": "620K",
+      "views": 342100,
+      "likes": 18450,
+      "dislikes": 320,
+      "uploadDate": "2024-07-02",
+      "duration": "18:04",
+      "category": "JavaScript",
+      "avatarUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
+      "comments": []
+    }
+  ],
+  "interactions": {
+    "user_1788770444708_video_http_1788770444778": "like",
+    "video_http_1788770444778": "like",
+    "user_1788717733264_video02": "like",
+    "video02": "like",
+    "user_1788717733264_video_1788770915130_bteq": "like",
+    "video_1788770915130_bteq": "like",
+    "user01_video02": "like"
+  },
+  "subscriptions": {}
+}

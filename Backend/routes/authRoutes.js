@@ -57,7 +57,9 @@ function formatUserResponse(user) {
     username: user.username,
     email: user.email,
     avatar: user.avatar,
-    channels: user.channels || []
+    channels: user.channels || [],
+    likedVideos: user.likedVideos || [],
+    dislikedVideos: user.dislikedVideos || []
   };
 }
 
@@ -100,15 +102,35 @@ router.post('/register', async (req, res) => {
 
       const defaultAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(trimmedUsername)}&backgroundColor=cc0000,0073e6,2ba640`;
       const newUser = new User({
-        userId: `user_${Date.now()}`,
+        userId: req.body.userId || `user_${Date.now()}`,
         username: trimmedUsername,
         email: emailLower,
         password,
         avatar: defaultAvatar,
-        channels: [`channel_${Date.now()}`]
+        channels: req.body.channels || [`channel_${Date.now()}`],
+        likedVideos: [],
+        dislikedVideos: []
       });
 
       await newUser.save();
+
+      // Keep JSON DB fallback in sync
+      const db = getDB();
+      const existingDbIdx = db.users.findIndex((u) => u.userId === newUser.userId || u.email === newUser.email);
+      if (existingDbIdx === -1) {
+        db.users.push({
+          userId: newUser.userId,
+          username: newUser.username,
+          email: newUser.email,
+          password: newUser.password,
+          avatar: newUser.avatar,
+          channels: newUser.channels,
+          likedVideos: [],
+          dislikedVideos: []
+        });
+        saveDB();
+      }
+
       const token = createAuthToken(newUser);
 
       return res.status(201).json({
@@ -129,12 +151,14 @@ router.post('/register', async (req, res) => {
 
     const defaultAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(trimmedUsername)}&backgroundColor=cc0000,0073e6,2ba640`;
     const newUser = {
-      userId: `user_${Date.now()}`,
+      userId: req.body.userId || `user_${Date.now()}`,
       username: trimmedUsername,
       email: emailLower,
       password,
       avatar: defaultAvatar,
-      channels: [`channel_${Date.now()}`]
+      channels: req.body.channels || [`channel_${Date.now()}`],
+      likedVideos: [],
+      dislikedVideos: []
     };
 
     db.users.push(newUser);
@@ -229,6 +253,65 @@ router.get('/me', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Fetch me error:', err);
     return res.status(500).json({ message: 'Internal server error retrieving user profile.' });
+  }
+});
+
+/**
+ * GET /api/auth/users
+ * Returns list of all user profiles.
+ */
+router.get('/users', async (_req, res) => {
+  try {
+    if (isMongoConnected()) {
+      const users = await User.find();
+      return res.json(users.map(formatUserResponse));
+    }
+    const db = getDB();
+    return res.json(db.users.map(formatUserResponse));
+  } catch (err) {
+    console.error('Fetch users error:', err);
+    return res.status(500).json({ message: 'Internal server error fetching users.' });
+  }
+});
+
+/**
+ * PUT /api/auth/users/:id
+ * Updates an existing user's profile details in MongoDB and JSON DB.
+ */
+router.put('/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const updateFields = { ...req.body };
+  delete updateFields.password; // Do not overwrite password directly here
+
+  try {
+    let updatedUser = null;
+
+    if (isMongoConnected()) {
+      updatedUser = await User.findOneAndUpdate(
+        { userId: id },
+        { $set: updateFields },
+        { returnDocument: 'after' }
+      );
+    }
+
+    const db = getDB();
+    const idx = db.users.findIndex((u) => u.userId === id);
+    if (idx !== -1) {
+      db.users[idx] = { ...db.users[idx], ...updateFields };
+      saveDB();
+      if (!updatedUser) {
+        updatedUser = db.users[idx];
+      }
+    }
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    return res.json({ user: formatUserResponse(updatedUser) });
+  } catch (err) {
+    console.error('Update user error:', err);
+    return res.status(500).json({ message: 'Internal server error updating user.' });
   }
 });
 

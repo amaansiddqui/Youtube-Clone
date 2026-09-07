@@ -12,7 +12,7 @@ export const initialUsers = [
 export const initialChannels = [
   {
     channelId: "channel01",
-    channelName: "Code with Marry",
+    channelName: "Code with John",
     owner: "user01",
     description: "Coding tutorials and tech reviews by John Doe.",
     channelBanner: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",

@@ -69,13 +69,23 @@ async function seedDatabaseIfNeeded() {
         console.log(`Healed ${brokenVideos.length} video streams to verified playable URLs in MongoDB`);
       }
 
-      // Prune removed moreVideos (video04-video16) and channels (channel04-channel08)
-      const validVideoIds = initialVideos.map((v) => v.videoId);
-      await Video.deleteMany({ videoId: { $nin: validVideoIds, $not: /^video_\d+$/ } });
-      await Comment.deleteMany({ videoId: { $nin: validVideoIds, $not: /^video_\d+$/ } });
+      // Auto-heal placeholder thumbnails (e.g. example.com)
+      const brokenThumbs = await Video.find({ thumbnailUrl: { $regex: 'example\\.com' } });
+      if (brokenThumbs.length > 0) {
+        for (const bt of brokenThumbs) {
+          bt.thumbnailUrl = 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1280&q=80';
+          await bt.save();
+        }
+        console.log(`Healed ${brokenThumbs.length} video thumbnails to verified high-res images in MongoDB`);
+      }
 
-      const validChannelIds = initialChannels.map((c) => c.channelId);
-      await Channel.deleteMany({ channelId: { $nin: validChannelIds, $not: /^channel_\d+$/ } });
+      // Prune only obsolete legacy seed placeholders if present
+      const legacyVideoIds = ['video04', 'video05', 'video06', 'video07', 'video08', 'video09', 'video10', 'video11', 'video12', 'video13', 'video14', 'video15', 'video16'];
+      await Video.deleteMany({ videoId: { $in: legacyVideoIds } });
+      await Comment.deleteMany({ videoId: { $in: legacyVideoIds } });
+
+      const legacyChannelIds = ['channel04', 'channel05', 'channel06', 'channel07', 'channel08'];
+      await Channel.deleteMany({ channelId: { $in: legacyChannelIds } });
     }
 
     // 4. Seed Comments collection from initial videos comments
