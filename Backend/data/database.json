@@ -167,9 +167,9 @@
     {
       "videoId": "video02",
       "title": "Build and Deploy a Full Stack YouTube Clone with React & Tailwind",
-      "thumbnailUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1280&q=80",
+      "thumbnailUrl": "https://s3-alpha.figma.com/hub/file/1803556575/dddad4ab-afbe-4c4b-bfbd-5f872db64b12-cover.png",
       "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
-      "description": "Learn how to build a complete YouTube UI clone from scratch using React, modern CSS Grid, Flexbox, responsive design principles, and custom video player integration.",
+      "description": "Learn how to build a complete YouTube UI clone from scratch using React, modern CSS Grid, Flexbox, responsive design principles, and custom video player integration.\n\nFeatures included:\n- Responsive YouTube Navigation & Mini Sidebar\n- Video Player with Like / Dislike interactions\n- Real-time Comment section (Add, Edit, Delete)\n- Category filtering & Search system\n- Persistent storage with mock database layer",
       "channelId": "channel01",
       "channelName": "Code with John",
       "uploader": "Code with John",
@@ -191,7 +191,8 @@
           "timestamp": "2024-08-16T10:12:00Z",
           "likes": 72
         }
-      ]
+      ],
+      "updatedAt": "2026-09-07T17:05:06.215Z"
     },
     {
       "videoId": "video03",

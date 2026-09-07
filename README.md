@@ -97,11 +97,15 @@ $env:PORT = "5000"
 
 Open two terminals from the repository root.
 
+
+### Github Repo 
+|`Repo link` | ('https://github.com/amaansiddqui/Youtube-Clone") |
+
 **Terminal 1: Backend API**
 
 ```powershell
 cd Backend
-npm run dev
+npm run start
 ```
 
 The API runs at `http://127.0.0.1:5000`.
@@ -132,7 +136,6 @@ The endpoint should return a JSON response with `status: "ok"`. The frontend sho
 The backend supports these environment variables:
 
 | Variable | Default | Purpose |
-| --- | --- | --- |
 | `PORT` | `5000` | Express server port |
 | `MONGODB_URI` | `mongodb://127.0.0.1:27017/youtube_clone` | MongoDB connection string |
 
@@ -141,17 +144,18 @@ The backend supports these environment variables:
 The frontend API client uses `http://127.0.0.1:5000/api`.
 
 | Method | Endpoint | Purpose |
-| --- | --- | --- |
 | `GET` | `/api/health` | Check backend availability |
-| `GET` | `/api/videos` | List videos, with optional search/category filters |
-| `GET` | `/api/videos/:id` | Fetch one video and user reaction status |
-| `POST` | `/api/videos` | Create a video |
+| `GET` | `/api/videos/video01?userId=user01` | List videos by ID |
+| `POST` | `/api/videos/video01/like` | Like Video |
+| `POST` | `/api/videos/video01/dislike` | Dislike Video |
 | `PUT` | `/api/videos/:id` | Update video metadata |
 | `DELETE` | `/api/videos/:id` | Delete a video |
-| `GET` | `/api/channels/:id` | Fetch a channel |
+| `POST` | `/api/videos/video01/comments` | Add Comment |
 | `GET` | `/api/auth/...` | Register, sign in, and manage users |
 
 The exact request and response handling lives in `Frontend/src/utils/api.js`; route-specific behavior lives under `Backend/routes/`.
+
+
 
 ## Data and Persistence
 
