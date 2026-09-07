@@ -76,10 +76,11 @@ export const DEFAULT_FALLBACK_THUMBNAILS = [
  * returns an attractive tech-themed fallback image.
  */
 export function getSafeThumbnail(url, index = 0) {
-  if (!url || url.includes('example.com')) {
-    return DEFAULT_FALLBACK_THUMBNAILS[index % DEFAULT_FALLBACK_THUMBNAILS.length];
+  if (!url || typeof url !== 'string' || !url.trim() || url.includes('example.com') || url === 'undefined' || url === 'null') {
+    const safeIdx = Math.abs(Number(index) || 0);
+    return DEFAULT_FALLBACK_THUMBNAILS[safeIdx % DEFAULT_FALLBACK_THUMBNAILS.length];
   }
-  return url;
+  return url.trim();
 }
 
 // Fallback banners for channel profiles

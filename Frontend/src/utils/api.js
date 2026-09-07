@@ -12,23 +12,14 @@
 import {
   getVideos as getLocalVideos,
   getVideoById as getLocalVideoById,
-  addComment as addLocalComment,
-  editComment as editLocalComment,
-  deleteComment as deleteLocalComment,
-  toggleVideoLike as toggleLocalVideoLike,
-  toggleVideoDislike as toggleLocalVideoDislike,
-  updateVideo as updateLocalVideo,
-  deleteVideo as deleteLocalVideo,
-  addVideo as addLocalVideo,
   getChannelSubscription as getLocalChannelSubscription,
-  toggleChannelSubscription as toggleLocalChannelSubscription
+  getInteractionsMap
 } from './videoService';
 
 import {
   getChannels as getLocalChannels,
   getChannelById as getLocalChannelById,
-  createChannel as createLocalChannel,
-  updateChannel as updateLocalChannel,
+  deleteChannel as deleteLocalChannel,
   getChannelVideos as getLocalChannelVideos
 } from './channelService';
 
@@ -88,6 +79,21 @@ export const authAPI = {
       if (data.token) {
         localStorage.setItem('yt_auth_token', data.token);
       }
+      if (data.user) {
+        try {
+          const raw = localStorage.getItem('yt_registered_users');
+          const users = raw ? JSON.parse(raw) : [];
+          const idx = users.findIndex((u) => u.userId === data.user.userId || u.email === data.user.email);
+          if (idx !== -1) {
+            users[idx] = { ...users[idx], ...data.user };
+          } else {
+            users.push(data.user);
+          }
+          localStorage.setItem('yt_registered_users', JSON.stringify(users));
+        } catch (e) {
+          void e;
+        }
+      }
       return data;
     } catch {
       return loginLocalUser(credentials);
@@ -107,6 +113,21 @@ export const authAPI = {
       if (data.token) {
         localStorage.setItem('yt_auth_token', data.token);
       }
+      if (data.user) {
+        try {
+          const raw = localStorage.getItem('yt_registered_users');
+          const users = raw ? JSON.parse(raw) : [];
+          const idx = users.findIndex((u) => u.userId === data.user.userId || u.email === data.user.email);
+          if (idx !== -1) {
+            users[idx] = { ...users[idx], ...data.user };
+          } else {
+            users.push(data.user);
+          }
+          localStorage.setItem('yt_registered_users', JSON.stringify(users));
+        } catch (e) {
+          void e;
+        }
+      }
       return data;
     } catch {
       return registerLocalUser(userData);
@@ -118,6 +139,21 @@ export const authAPI = {
    */
   getCurrentUser: () => {
     return getLocalCurrentUser();
+  },
+
+  /**
+   * Updates an existing user's profile details.
+   */
+  updateUser: async (id, fields) => {
+    try {
+      const data = await tryFetch(`/auth/users/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(fields)
+      });
+      return data.user || data;
+    } catch {
+      return fields;
+    }
   },
 
   /**
@@ -165,7 +201,7 @@ export const videoAPI = {
       });
       return data.video || data;
     } catch {
-      return addLocalVideo(videoData);
+      return getLocalVideoById(videoData.videoId) || videoData;
     }
   },
 
@@ -180,7 +216,7 @@ export const videoAPI = {
       });
       return data.video || data;
     } catch {
-      return updateLocalVideo(id, fields);
+      return getLocalVideoById(id);
     }
   },
 
@@ -192,44 +228,60 @@ export const videoAPI = {
       await tryFetch(`/videos/${id}`, { method: 'DELETE' });
       return true;
     } catch {
-      return deleteLocalVideo(id);
+      return true;
     }
   },
 
   /**
-   * Toggles like state on a video.
+   * Toggles like state on a video and syncs with backend/MongoDB.
+   * Passes currentStatus and user to prevent double-toggle and ensure exact reaction alignment.
    */
-  likeVideo: async (id) => {
+  likeVideo: async (id, currentStatus, user) => {
     try {
-      return await tryFetch(`/videos/${id}/like`, { method: 'POST' });
+      const data = await tryFetch(`/videos/${id}/like`, {
+        method: 'POST',
+        body: JSON.stringify({ currentStatus, userId: user?.userId })
+      });
+      return data;
     } catch {
-      return toggleLocalVideoLike(id);
+      // Offline / fallback: return existing local video without toggling again
+      const video = getLocalVideoById(id);
+      const interactions = getInteractionsMap();
+      return { video, userStatus: interactions[id] || null };
     }
   },
 
   /**
-   * Toggles dislike state on a video.
+   * Toggles dislike state on a video and syncs with backend/MongoDB.
+   * Passes currentStatus and user to prevent double-toggle and ensure exact reaction alignment.
    */
-  dislikeVideo: async (id) => {
+  dislikeVideo: async (id, currentStatus, user) => {
     try {
-      return await tryFetch(`/videos/${id}/dislike`, { method: 'POST' });
+      const data = await tryFetch(`/videos/${id}/dislike`, {
+        method: 'POST',
+        body: JSON.stringify({ currentStatus, userId: user?.userId })
+      });
+      return data;
     } catch {
-      return toggleLocalVideoDislike(id);
+      // Offline / fallback: return existing local video without toggling again
+      const video = getLocalVideoById(id);
+      const interactions = getInteractionsMap();
+      return { video, userStatus: interactions[id] || null };
     }
   },
 
   /**
    * Posts a new comment to a video.
    */
-  addComment: async (videoId, { text, user }) => {
+  addComment: async (videoId, { text, user, commentId }) => {
     try {
       const res = await tryFetch(`/videos/${videoId}/comments`, {
         method: 'POST',
-        body: JSON.stringify({ text, user })
+        body: JSON.stringify({ text, user, commentId })
       });
       return res;
     } catch {
-      return addLocalComment(videoId, { text, user });
+      return { video: getLocalVideoById(videoId), comment: { commentId, text, userId: user?.userId } };
     }
   },
 
@@ -244,7 +296,7 @@ export const videoAPI = {
       });
       return res;
     } catch {
-      return editLocalComment(videoId, commentId, text);
+      return { video: getLocalVideoById(videoId) };
     }
   },
 
@@ -257,7 +309,7 @@ export const videoAPI = {
         method: 'DELETE'
       });
     } catch {
-      return deleteLocalComment(videoId, commentId);
+      return { success: true, video: getLocalVideoById(videoId) };
     }
   }
 };
@@ -311,7 +363,7 @@ export const channelAPI = {
       });
       return data.channel || data;
     } catch {
-      return createLocalChannel(channelData);
+      return getLocalChannelById(channelData.channelId) || channelData;
     }
   },
 
@@ -326,7 +378,19 @@ export const channelAPI = {
       });
       return data.channel || data;
     } catch {
-      return updateLocalChannel(id, fields);
+      return getLocalChannelById(id);
+    }
+  },
+
+  /**
+   * Deletes a channel permanently.
+   */
+  deleteChannel: async (id) => {
+    try {
+      await tryFetch(`/channels/${id}`, { method: 'DELETE' });
+      return true;
+    } catch {
+      return deleteLocalChannel(id);
     }
   },
 
@@ -338,7 +402,7 @@ export const channelAPI = {
       const data = await tryFetch(`/channels/${id}/subscribe`, { method: 'POST' });
       return data.isSubscribed;
     } catch {
-      return toggleLocalChannelSubscription(id);
+      return getLocalChannelSubscription(id);
     }
   },
 

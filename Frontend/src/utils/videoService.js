@@ -96,7 +96,7 @@ export function getVideoById(videoId) {
 /**
  * Add a new comment to a video and persist in the database
  */
-export function addComment(videoId, { text, user }) {
+export function addComment(videoId, { text, user, commentId }) {
   if (!videoId || !text || !text.trim()) {
     throw new Error('Comment text cannot be empty.');
   }
@@ -109,7 +109,7 @@ export function addComment(videoId, { text, user }) {
   }
 
   const newComment = {
-    commentId: `c_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    commentId: commentId || `c_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     userId: user?.userId || `guest_${Date.now()}`,
     author: user?.username || 'You',
     avatarUrl: user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
@@ -197,7 +197,7 @@ export function deleteComment(videoId, commentId) {
 /**
  * User interactions (like/dislike) storage helpers
  */
-function getInteractionsMap() {
+export function getInteractionsMap() {
   try {
     const raw = localStorage.getItem(STORAGE_INTERACTIONS_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -206,7 +206,7 @@ function getInteractionsMap() {
   }
 }
 
-function saveInteractionsMap(map) {
+export function saveInteractionsMap(map) {
   try {
     localStorage.setItem(STORAGE_INTERACTIONS_KEY, JSON.stringify(map));
   } catch (err) {

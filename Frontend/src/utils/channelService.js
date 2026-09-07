@@ -175,6 +175,7 @@ export function getUserPrimaryChannel(userId) {
  * Create a new channel. Only signed-in users can call this!
  */
 export function createChannel({
+  channelId: providedChannelId,
   channelName,
   description = '',
   channelBanner = '',
@@ -193,7 +194,7 @@ export function createChannel({
   const trimmedName = channelName.trim();
 
   // Create unique channel ID
-  const channelId = `channel_${Date.now()}`;
+  const channelId = providedChannelId || `channel_${Date.now()}`;
 
   const newChannel = {
     channelId,
