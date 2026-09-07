@@ -2,7 +2,7 @@ export const initialVideos = [
   {
     videoId: "video01",
     title: "Learn React in 30 Minutes",
-    thumbnailUrl: "https://example.com/thumbnails/react30min.png",
+    thumbnailUrl: "https://fiverr-res.cloudinary.com/images/t_main1,q_auto,f_auto,q_auto,f_auto/gigs/361654051/original/4d346061de746c0945c747204bcf70caf7cf1a0b/create-youtube-thumbnail-in-3-hours.png",
     videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
     description: "A quick tutorial to get started with React.",
     channelId: "channel01",
