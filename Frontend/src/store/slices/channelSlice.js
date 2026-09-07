@@ -75,6 +75,18 @@ export const toggleSubscribeThunk = createAsyncThunk(
   }
 );
 
+export const deleteChannelThunk = createAsyncThunk(
+  'channels/deleteChannel',
+  async (channelId, { rejectWithValue }) => {
+    try {
+      await channelAPI.deleteChannel(channelId);
+      return channelId;
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
 const initialState = {
   channels: getChannels(),
   currentChannel: null,
@@ -131,6 +143,13 @@ export const channelSlice = createSlice({
       .addCase(toggleSubscribeThunk.fulfilled, (state, action) => {
         const { channelId, isSubscribed } = action.payload;
         state.subscriptions[channelId] = isSubscribed;
+      })
+      // deleteChannel
+      .addCase(deleteChannelThunk.fulfilled, (state, action) => {
+        state.channels = state.channels.filter((c) => c.channelId !== action.payload);
+        if (state.currentChannel && state.currentChannel.channelId === action.payload) {
+          state.currentChannel = null;
+        }
       });
   }
 });

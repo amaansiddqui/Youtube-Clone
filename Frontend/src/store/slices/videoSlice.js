@@ -67,9 +67,12 @@ export const deleteVideoThunk = createAsyncThunk(
 
 export const toggleLikeThunk = createAsyncThunk(
   'videos/toggleLike',
-  async (videoId, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      return await videoAPI.likeVideo(videoId);
+      const videoId = typeof payload === 'string' ? payload : payload.videoId;
+      const currentStatus = typeof payload === 'object' ? payload.currentStatus : undefined;
+      const user = typeof payload === 'object' ? payload.user : undefined;
+      return await videoAPI.likeVideo(videoId, currentStatus, user);
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -78,9 +81,12 @@ export const toggleLikeThunk = createAsyncThunk(
 
 export const toggleDislikeThunk = createAsyncThunk(
   'videos/toggleDislike',
-  async (videoId, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      return await videoAPI.dislikeVideo(videoId);
+      const videoId = typeof payload === 'string' ? payload : payload.videoId;
+      const currentStatus = typeof payload === 'object' ? payload.currentStatus : undefined;
+      const user = typeof payload === 'object' ? payload.user : undefined;
+      return await videoAPI.dislikeVideo(videoId, currentStatus, user);
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -89,9 +95,9 @@ export const toggleDislikeThunk = createAsyncThunk(
 
 export const addCommentThunk = createAsyncThunk(
   'videos/addComment',
-  async ({ videoId, text, user }, { rejectWithValue }) => {
+  async ({ videoId, text, user, commentId }, { rejectWithValue }) => {
     try {
-      return await videoAPI.addComment(videoId, { text, user });
+      return await videoAPI.addComment(videoId, { text, user, commentId });
     } catch (err) {
       return rejectWithValue(err.message);
     }
