@@ -80,14 +80,15 @@
       "channelId": "channel_1788770857034",
       "channelName": "Code with Amaan",
       "owner": "user_1788717733264",
-      "description": "Welcome to Code with Amaan! Official channel for videos, tutorials, and community updates.",
-      "channelBanner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
+      "description": "Welcome to Code with Amaan! Official channel for videos and updates.",
+      "channelBanner": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80",
       "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Amaan___&backgroundColor=cc0000,0073e6,2ba640",
       "subscribers": 0,
       "videos": [
         "video_1788770915130_bteq"
       ],
-      "createdAt": "2026-09-07T08:47:37.213Z"
+      "createdAt": "2026-09-07T08:47:37.213Z",
+      "updatedAt": "2026-09-07T09:44:11.415Z"
     }
   ],
   "videos": [
