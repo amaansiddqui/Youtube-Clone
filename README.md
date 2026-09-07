@@ -153,9 +153,6 @@ The frontend API client uses `http://127.0.0.1:5000/api`.
 | `POST` | `/api/videos/video01/comments` | Add Comment |
 | `GET` | `/api/auth/...` | Register, sign in, and manage users |
 
-The exact request and response handling lives in `Frontend/src/utils/api.js`; route-specific behavior lives under `Backend/routes/`.
-
-
 
 ## Data and Persistence
 
