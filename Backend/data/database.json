@@ -40,16 +40,15 @@
       "channelId": "channel01",
       "channelName": "Code with John",
       "owner": "user01",
-      "description": "Coding tutorials and tech reviews by John !!",
-      "channelBanner": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1600&q=80",
-      "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
+      "description": "Coding tutorials and tech reviews by John Doe.",
+      "channelBanner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
+      "avatarUrl": "https://static.vecteezy.com/system/resources/thumbnails/043/101/076/small_2x/ai-generated-teacher-standing-in-a-school-classroom-photo.jpeg",
       "subscribers": 5200,
       "videos": [
         "video01",
         "video02"
       ],
-      "createdAt": "2024-01-15T00:00:00.000Z",
-      "updatedAt": "2026-09-07T09:25:43.821Z"
+      "createdAt": "2024-01-15T00:00:00.000Z"
     },
     {
       "channelId": "channel02",
@@ -86,37 +85,12 @@
       "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Amaan___&backgroundColor=cc0000,0073e6,2ba640",
       "subscribers": 0,
       "videos": [
-        "video_1788770915130_bteq",
-        "video_1788773475936_6hsq"
+        "video_1788770915130_bteq"
       ],
       "createdAt": "2026-09-07T08:47:37.213Z"
     }
   ],
   "videos": [
-    {
-      "videoId": "video_1788773475936_6hsq",
-      "title": "Energetic music",
-      "description": "Feel the music !!",
-      "category": "Music",
-      "thumbnailUrl": "https://resource.designwiz.com/designwiz/compressed/energetic-live-music-performance-experience-youtube-thumbnail-template-dasb3b1ca662dd.jpg",
-      "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
-      "duration": "10:00",
-      "fileMetadata": {
-        "format": "mp4",
-        "size": 10485760,
-        "mimeType": "video/mp4",
-        "resolution": "1080p"
-      },
-      "channelId": "channel_1788770857034",
-      "channelName": "Code with Amaan",
-      "uploader": "Code with Amaan",
-      "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Amaan___&backgroundColor=cc0000,0073e6,2ba640",
-      "views": 0,
-      "likes": 0,
-      "dislikes": 0,
-      "uploadDate": "2026-09-07T09:31:15.945Z",
-      "comments": []
-    },
     {
       "videoId": "video_1788770915130_bteq",
       "title": "Full Stack Course",
@@ -160,7 +134,7 @@
       "description": "A quick tutorial to get started with React.",
       "channelId": "channel01",
       "channelName": "Code with John",
-      "uploader": "Code with John",
+      "uploader": "user01",
       "subscribers": "5.2K",
       "views": 15200,
       "likes": 1023,
@@ -179,15 +153,14 @@
           "timestamp": "2024-09-21T08:30:00Z",
           "likes": 38
         }
-      ],
-      "updatedAt": "2026-09-07T09:24:03.190Z"
+      ]
     },
     {
       "videoId": "video02",
       "title": "Build and Deploy a Full Stack YouTube Clone with React & Tailwind",
-      "thumbnailUrl": "https://s3-alpha.figma.com/hub/file/1803556575/dddad4ab-afbe-4c4b-bfbd-5f872db64b12-cover.png",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1280&q=80",
       "videoUrl": "https://vjs.zencdn.net/v/oceans.mp4",
-      "description": "Learn how to build a complete YouTube UI clone from scratch using React, modern CSS Grid, Flexbox, responsive design principles, and custom video player integration.\n\nFeatures included:\n- Responsive YouTube Navigation & Mini Sidebar\n- Video Player with Like / Dislike interactions\n- Real-time Comment section (Add, Edit, Delete)\n- Category filtering & Search system\n- Persistent storage with mock database layer",
+      "description": "Learn how to build a complete YouTube UI clone from scratch using React, modern CSS Grid, Flexbox, responsive design principles, and custom video player integration.",
       "channelId": "channel01",
       "channelName": "Code with John",
       "uploader": "Code with John",
@@ -209,8 +182,7 @@
           "timestamp": "2024-08-16T10:12:00Z",
           "likes": 72
         }
-      ],
-      "updatedAt": "2026-09-07T09:24:15.377Z"
+      ]
     },
     {
       "videoId": "video03",
@@ -257,8 +229,7 @@
     "user_1788717733264_video02": "like",
     "video02": "like",
     "user_1788717733264_video_1788770915130_bteq": "like",
-    "video_1788770915130_bteq": "like",
-    "user01_video02": "like"
+    "video_1788770915130_bteq": "like"
   },
   "subscriptions": {}
 }

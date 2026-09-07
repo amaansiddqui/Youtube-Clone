@@ -259,7 +259,7 @@ export default function VideoPlayer({ video }) {
               if (videoRef.current) {
                 videoRef.current.src = fallbackStream;
                 videoRef.current.load();
-                videoRef.current.play().catch(() => {});
+                videoRef.current.play().catch(() => { });
               }
             }}
             className="px-4 py-2 bg-white text-black font-semibold text-xs rounded-full hover:bg-neutral-200 transition-colors cursor-pointer"
@@ -271,9 +271,8 @@ export default function VideoPlayer({ video }) {
 
       {/* Bottom Controls Bar */}
       <div
-        className={`yt-player-controls absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-8 pb-3 px-4 flex flex-col transition-opacity duration-300 ${
-          showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+        className={`yt-player-controls absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-8 pb-3 px-4 flex flex-col transition-opacity duration-300 ${showControls || !isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
       >
         {/* Progress Bar (Scrubber) */}
         <div className="yt-progress-container relative w-full h-1.5 hover:h-2.5 transition-all group/progress cursor-pointer flex items-center mb-3">
