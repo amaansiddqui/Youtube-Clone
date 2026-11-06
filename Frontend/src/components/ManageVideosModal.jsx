@@ -1,12 +1,3 @@
-/**
- * Manage Videos Modal (YouTube Studio style)
- * Provides a management dashboard for creator channels:
- * - List all uploaded videos with metrics (views, duration, comments)
- * - Search within channel videos
- * - Quick actions: Watch, Edit details, Delete video
- * - Direct trigger for uploading new videos
- */
-
 import { useState, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { formatViews, formatTimeAgo, getSafeThumbnail } from '../utils/formatters';

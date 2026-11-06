@@ -1,15 +1,3 @@
-/**
- * Comment Section Component
- * Handles YouTube video commenting workflow:
- * - Total comments counter
- * - Sorting toggle (Top comments vs Newest first)
- * - Comment input box with focus underline and Cancel/Comment buttons
- * - Individual comment rendering with time ago and edited badge
- * - Options menu (Edit, Delete) for author
- * - Inline edit mode with Save / Cancel
- * - Like and dislike counters on individual comments
- */
-
 import { useState, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { ThumbUpIcon, ThumbDownIcon, MoreVerticalIcon, EditIcon, TrashIcon, SortIcon } from './Icons';

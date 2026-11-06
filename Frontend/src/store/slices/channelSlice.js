@@ -1,9 +1,3 @@
-/**
- * Redux Slice: Channels
- * Manages creator channels, channel-specific video lists,
- * channel profile customization, and subscription statuses.
- */
-
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { channelAPI } from '../../utils/api';
 import { getChannels } from '../../utils/channelService';

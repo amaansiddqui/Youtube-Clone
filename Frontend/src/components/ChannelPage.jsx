@@ -1,20 +1,10 @@
-/**
- * Creator Channel Page
- * Displays full channel profile:
- * - Wide banner image and circular avatar
- * - Channel handle, subscriber counter, and video count
- * - Owner action buttons ('Customize channel', 'Manage videos', 'Upload video')
- * - Viewer action button ('Subscribe' / 'Subscribed')
- * - Videos tab and About tab
- * - Integrated modals for editing, uploading, and managing videos
- */
-
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import {
   getChannelById,
   getChannelVideos
 } from '../utils/channelService';
+import { youtubeAPI } from '../utils/api';
 
 import {
   deleteVideo,
@@ -39,7 +29,12 @@ export default function ChannelPage({
 }) {
   const dispatch = useDispatch();
   const [channel, setChannel] = useState(() => getChannelById(channelId));
-  const [videos, setVideos] = useState(() => getChannelVideos(channelId));
+  const [videos, setVideos] = useState(() =>
+    getChannelById(channelId) ? getChannelVideos(channelId) : []
+  );
+  const [isLoadingChannel, setIsLoadingChannel] = useState(() => !getChannelById(channelId));
+  const [channelError, setChannelError] = useState(null);
+  const [isRemoteChannel] = useState(() => !getChannelById(channelId));
   const [activeTab, setActiveTab] = useState('Videos'); // 'Videos' | 'About'
   const [isSubscribed, setIsSubscribed] = useState(() => getChannelSubscription(channelId));
   const [editingVideo, setEditingVideo] = useState(null);
@@ -60,9 +55,46 @@ export default function ChannelPage({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+    const localChannel = getChannelById(channelId);
+
+    if (localChannel) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    Promise.all([
+      youtubeAPI.getChannel(channelId),
+      youtubeAPI.getChannelVideos(channelId)
+    ]).then(([remoteChannel, remoteVideos]) => {
+      if (!remoteChannel) {
+        throw new Error('YouTube channel not found.');
+      }
+      if (!isMounted) return;
+      setChannel({
+        ...remoteChannel,
+        channelName: remoteChannel.name,
+        channelBanner: remoteChannel.bannerUrl
+      });
+      setVideos(remoteVideos);
+    }).catch((error) => {
+      if (!isMounted) return;
+      setChannelError(error.message);
+    }).finally(() => {
+      if (isMounted) setIsLoadingChannel(false);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [channelId]);
+
   // Listen to database updates
   useEffect(() => {
     const handleUpdate = () => {
+      if (isRemoteChannel) return;
       const currentChannel = getChannelById(channelId);
       setChannel(currentChannel);
       setVideos(getChannelVideos(channelId));
@@ -74,7 +106,16 @@ export default function ChannelPage({
       window.removeEventListener('yt-video-updated', handleUpdate);
       window.removeEventListener('yt-channel-updated', handleUpdate);
     };
-  }, [channelId]);
+  }, [channelId, isRemoteChannel]);
+
+  if (isLoadingChannel) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-white" role="status">
+        <div className="w-10 h-10 border-4 border-white/20 border-t-[#a99eff] rounded-full animate-spin mb-4" />
+        <p className="text-neutral-400">Loading YouTube channel…</p>
+      </div>
+    );
+  }
 
   // Handle case where channel does not exist
   if (!channel) {
@@ -82,7 +123,7 @@ export default function ChannelPage({
       <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-white">
         <div className="text-5xl mb-4">📺</div>
         <h2 className="text-2xl font-bold mb-2">Channel does not exist</h2>
-        <p className="text-neutral-400 mb-6">This channel may have been removed or the ID is incorrect.</p>
+        <p className="text-neutral-400 mb-6">{channelError || 'This channel may have been removed or the ID is incorrect.'}</p>
         <div className="flex gap-4">
           <button
             onClick={onNavigateHome}
@@ -105,7 +146,9 @@ export default function ChannelPage({
 
   // Determine ownership and channel handle
   const isOwner = currentUser && currentUser.userId === channel.owner;
-  const channelHandle = `@${channel.channelName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+  const channelHandle = channel.handle
+    ? (channel.handle.startsWith('@') ? channel.handle : `@${channel.handle}`)
+    : `@${channel.channelName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
   const bannerImage = getSafeBanner(channel.channelBanner);
   const totalViews = videos.reduce((sum, v) => sum + (Number(v.views) || 0), 0);
 

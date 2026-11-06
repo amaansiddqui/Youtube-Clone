@@ -1,19 +1,8 @@
-/**
- * Video Card Component
- * Renders individual video previews in feeds and search results.
- * Features:
- * - 16:9 responsive thumbnail with duration badge
- * - Fallback image handling on network error
- * - Channel avatar with direct click to channel page
- * - Title, formatted view count, and relative time
- * - Full keyboard accessibility (Enter/Space to watch)
- */
-
 import { useState } from 'react';
 import { formatViews, formatTimeAgo, getSafeThumbnail } from '../utils/formatters';
 import { VerifiedIcon, MoreVerticalIcon } from './Icons';
 
-export default function VideoCard({ video, index = 0, onSelectVideo, onNavigateChannel }) {
+export default function VideoCard({ video, index = 0, onSelectVideo, onNavigateChannel, style }) {
   const [failedUrl, setFailedUrl] = useState(null);
 
   // Derived thumbnail: if current URL failed to load, use guaranteed fallback
@@ -51,6 +40,7 @@ export default function VideoCard({ video, index = 0, onSelectVideo, onNavigateC
   return (
     <div
       className="yt-video-card flex flex-col cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-[#3ea6ff] rounded-xl transition-transform duration-200"
+      style={style}
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}

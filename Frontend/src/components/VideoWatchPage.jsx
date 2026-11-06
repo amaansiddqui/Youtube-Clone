@@ -1,20 +1,10 @@
-/**
- * Video Watch Page
- * Full YouTube viewing page layout:
- * - HTML5 / responsive custom VideoPlayer
- * - Title, creator identity badge, and Subscribe button
- * - Combined Like / Dislike reaction pill
- * - Share button with link-copied feedback
- * - Expandable video description box
- * - CommentSection with full CRUD operations
- * - Recommended videos sidebar
- */
-
 import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import VideoPlayer from './VideoPlayer';
+import YouTubePlayer from './YouTubePlayer';
 
 import CommentSection from './CommentSection';
+import { selectAllVideos } from '../store/slices/videoSlice';
 import { toggleLikeThunk, toggleDislikeThunk } from '../store/slices/videoSlice';
 import { toggleSubscribeThunk } from '../store/slices/channelSlice';
 import {
@@ -29,7 +19,6 @@ import {
 import { formatViews, formatTimeAgo, getSafeThumbnail } from '../utils/formatters';
 import {
   getVideoById,
-  getVideos,
   toggleVideoLike,
   toggleVideoDislike,
   getUserVideoInteraction,
@@ -37,7 +26,7 @@ import {
   getChannelSubscription,
   toggleChannelSubscription
 } from '../utils/videoService';
-import { videoAPI } from '../utils/api';
+import { videoAPI, youtubeAPI } from '../utils/api';
 
 export default function VideoWatchPage({
   videoId,
@@ -47,24 +36,80 @@ export default function VideoWatchPage({
   onNavigateChannel
 }) {
   const dispatch = useDispatch();
-  const [video, setVideo] = useState(() => getVideoById(videoId));
+  // Seed from the Redux feed so the video the user just clicked renders instantly
+  const feedVideos = useSelector(selectAllVideos);
+  const isLocalUpload = videoId.startsWith('video_');
+  const [video, setVideo] = useState(() =>
+    feedVideos.find((v) => v.videoId === videoId) || (isLocalUpload ? getVideoById(videoId) : null)
+  );
+  const [youtubeVideo, setYoutubeVideo] = useState(null);
+  const [relatedVideos, setRelatedVideos] = useState([]);
+  const [isFetching, setIsFetching] = useState(() => !isLocalUpload && !feedVideos.some((v) => v.videoId === videoId));
   const [userStatus, setUserStatus] = useState(() => getUserVideoInteraction(videoId, currentUser));
   const [isSubscribed, setIsSubscribed] = useState(() => {
+    if (!isLocalUpload) return false;
     const v = getVideoById(videoId);
     return v ? getChannelSubscription(v.channelId) : false;
   });
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
-  const [allVideosList, setAllVideosList] = useState(() => getVideos());
 
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // If this is a real YouTube video ID (not a local upload), fetch it from the YouTube Data API
+  useEffect(() => {
+    if (!videoId || videoId.startsWith('video_')) {
+      setIsFetching(false);
+      return;
+    }
+    let isMounted = true;
+    (async () => {
+      setIsFetching(true);
+      try {
+        const ytVideo = await youtubeAPI.getVideo(videoId);
+        if (isMounted && ytVideo) {
+          setYoutubeVideo(ytVideo);
+          setVideo(ytVideo);
+
+          // Fetch real related videos based on the current video's title/topic
+          try {
+            const query = (ytVideo.title || '').split(/[|(-]/)[0].trim();
+            const related = query
+              ? await youtubeAPI.search(query, 16)
+              : [];
+            if (isMounted && related.length > 0) {
+              setRelatedVideos(related.filter((rv) => rv.videoId !== videoId));
+            }
+          } catch {
+            // Related fetch failed — fall back to local list
+          }
+        }
+      } catch {
+        // YouTube API unavailable — fall back to local video
+      } finally {
+        if (isMounted) setIsFetching(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [videoId]);
+
+  // Merge YouTube live data over the stored video
+  const activeVideo = youtubeVideo && youtubeVideo.videoId === videoId
+    ? { ...(video || {}), ...youtubeVideo, comments: youtubeVideo.comments?.length ? youtubeVideo.comments : (video?.comments || []) }
+    : video;
+
   // Synchronize interaction state whenever active user or video changes
   useEffect(() => {
     setUserStatus(getUserVideoInteraction(videoId, currentUser));
+
+    // Real YouTube videos are served by the YouTube API above — skip the app
+    // backend lookup, which has no record of them (it would just 404).
+    if (!videoId || !videoId.startsWith('video_')) return;
 
     let isMounted = true;
     (async () => {
@@ -94,6 +139,10 @@ export default function VideoWatchPage({
   useEffect(() => {
     const handleDatabaseUpdate = (e) => {
       const updatedVideoId = e.detail?.videoId;
+      if (!isLocalUpload) {
+        setUserStatus(getUserVideoInteraction(videoId, currentUser));
+        return;
+      }
       if (!updatedVideoId || updatedVideoId === videoId) {
         const fresh = getVideoById(videoId);
         if (fresh) {
@@ -102,17 +151,22 @@ export default function VideoWatchPage({
         }
         setUserStatus(getUserVideoInteraction(videoId, currentUser));
       }
-      setAllVideosList(getVideos());
     };
 
     window.addEventListener('yt-video-updated', handleDatabaseUpdate);
     return () => window.removeEventListener('yt-video-updated', handleDatabaseUpdate);
-  }, [videoId, currentUser?.userId]);
+  }, [videoId, currentUser?.userId, isLocalUpload]);
 
   // Handle Likes
   const handleLikeClick = async () => {
     if (!video) return;
     const previousStatus = userStatus;
+    if (!isLocalUpload) {
+      const nextStatus = previousStatus === 'like' ? null : 'like';
+      setUserStatus(nextStatus);
+      setUserVideoInteraction(video.videoId, currentUser, nextStatus);
+      return;
+    }
     const result = toggleVideoLike(video.videoId, currentUser);
     if (result) {
       setVideo(result.video);
@@ -146,6 +200,12 @@ export default function VideoWatchPage({
   const handleDislikeClick = async () => {
     if (!video) return;
     const previousStatus = userStatus;
+    if (!isLocalUpload) {
+      const nextStatus = previousStatus === 'dislike' ? null : 'dislike';
+      setUserStatus(nextStatus);
+      setUserVideoInteraction(video.videoId, currentUser, nextStatus);
+      return;
+    }
     const result = toggleVideoDislike(video.videoId, currentUser);
     if (result) {
       setVideo(result.video);
@@ -202,6 +262,15 @@ export default function VideoWatchPage({
   };
 
   if (!video) {
+    // While the YouTube data is loading, show a spinner — not "Video not found"
+    if (isFetching) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+          <div className="w-12 h-12 border-4 border-white/20 border-t-[#ff0000] rounded-full animate-spin mb-4" />
+          <p className="text-neutral-400 text-sm">Loading video…</p>
+        </div>
+      );
+    }
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
         <h2 className="text-2xl font-bold text-white mb-2">Video not found</h2>
@@ -217,8 +286,16 @@ export default function VideoWatchPage({
   }
 
   const channelTitle = video.channelName || video.uploader || 'YouTube Creator';
-  const subscriberCount = video.subscribers || '1.24M';
-  const recommendedVideos = allVideosList.filter((v) => v.videoId !== video.videoId);
+  const subscriberCount = typeof video.subscribers === 'string' && video.subscribers
+    ? video.subscribers.replace(' subscribers', '')
+    : video.channelSubscribers
+      ? Math.round(Number(video.channelSubscribers) / 1000) + 'K'
+      : '1.24M';
+  // Use YouTube search recommendations, with the current API feed as a fallback.
+  const recommendedVideos = (relatedVideos.length > 0
+    ? relatedVideos
+    : feedVideos.filter((v) => v.videoId !== video.videoId)
+  ).slice(0, 20);
 
   return (
     <div className="yt-watch-page w-full min-h-[calc(100vh-3.5rem)] bg-[#0f0f0f] text-white px-3 sm:px-6 lg:px-10 py-6">
@@ -226,8 +303,16 @@ export default function VideoWatchPage({
 
         {/* Left / Primary Column: Video Player, Metadata, Description, Comments */}
         <div className="lg:col-span-8 flex flex-col">
-          {/* Video Player */}
-          <VideoPlayer key={video.videoId} video={video} />
+          {/* Video Player (YouTube iframe for real videos, HTML5 for uploads) */}
+          {activeVideo?.youtubeVideoId ? (
+            <YouTubePlayer
+              key={activeVideo.videoId}
+              video={activeVideo}
+              onNextVideo={recommendedVideos.length > 0 ? () => onNavigateVideo(recommendedVideos[0].videoId) : undefined}
+            />
+          ) : (
+            <VideoPlayer key={video.videoId} video={video} />
+          )}
 
           {/* Video Title */}
           <h1 className="text-lg sm:text-xl font-bold text-white mt-4 mb-2 leading-snug select-text">
@@ -397,7 +482,7 @@ export default function VideoWatchPage({
           {/* Comments Section */}
           <CommentSection
             videoId={video.videoId}
-            comments={video.comments || []}
+            comments={activeVideo?.comments || video.comments || []}
             currentUser={currentUser}
             onCommentUpdated={(updatedVideo) => {
               setVideo(updatedVideo);

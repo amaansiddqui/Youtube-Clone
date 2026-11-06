@@ -25,14 +25,7 @@ function escapeRegex(text) {
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
 
-/**
- * Computes the updated like and dislike numbers along with user reaction status.
- * Replicates YouTube's reaction behavior:
- * Clicking 'like' when already liked removes the like (returns neutral).
- * Clicking 'like' when disliked removes dislike and adds like.
- * Clicking 'like' when neutral adds like.
- * Same symmetric behavior applies for 'dislike'.
- */
+/** Computes reaction counts and the user's updated like/dislike status. */
 function computeUpdatedReactions(currentLikes, currentDislikes, currentStatus, action) {
   let likes = Math.max(0, Number(currentLikes) || 0);
   let dislikes = Math.max(0, Number(currentDislikes) || 0);
@@ -73,11 +66,7 @@ function computeUpdatedReactions(currentLikes, currentDislikes, currentStatus, a
   return { likes, dislikes, newStatus };
 }
 
-/**
- * Helper: Resolves the existing like/dislike reaction status for a specific user and video.
- * Checks MongoDB user records, JSON database users, and scoped interaction keys.
- * Never falls back to an un-scoped videoId key for an authenticated/identified user.
- */
+/** Resolves a user's reaction without using an unscoped video ID key. */
 async function resolveUserReactionStatus(videoId, userId, clientStatus = null, guestId = null) {
   const db = getDB();
 
@@ -343,11 +332,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-/**
- * GET /api/videos/:id
- * Fetches the full metadata and details for a single video by its videoId.
- * Includes userStatus if user is authenticated or userId/guestId provided.
- */
+/** GET /api/videos/:id — returns video details and optional user reaction. */
 router.get('/:id', optionalAuth, async (req, res) => {
   const { id } = req.params;
   const userId = req.user?.userId || req.query.userId || null;
@@ -377,11 +362,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
   }
 });
 
-/**
- * POST /api/videos
- * Publishes a new video with associated file metadata (resolution, format, duration).
- * Also associates the video ID with the creator's channel.
- */
+/** POST /api/videos — publishes a video and links it to its channel. */
 router.post('/', async (req, res) => {
   const {
     title,
@@ -519,13 +500,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/videos/:id
- * Deletes a video and cascades cleanup:
- * 1. Removes the video document
- * 2. Removes the video ID reference from channels
- * 3. Removes all comments associated with the video
- */
+/** DELETE /api/videos/:id — deletes the video and its channel/comment references. */
 router.delete('/:id', async (req, res) => {
   const videoId = req.params.id;
 

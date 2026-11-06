@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { initDB } from './data/db.js';
@@ -5,14 +6,12 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import videoRoutes from './routes/videoRoutes.js';
 import channelRoutes from './routes/channelRoutes.js';
+import youtubeRoutes from './routes/youtubeRoutes.js';
+import assistantRoutes from './routes/assistantRoutes.js';
 
 // Initialize the Express application
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
 // Setup persistence layers:
 // 1. JSON file/in-memory cache for fast local access and offline fallback
@@ -20,11 +19,7 @@ app.listen(PORT, () => {
 initDB();
 connectDB();
 
-/**
- * Configure Cross-Origin Resource Sharing (CORS)
- * Allows the React/Vite frontend (running on localhost:5173 or other ports)
- * to communicate seamlessly with this backend API.
- */
+// Allow browser clients to call the API.
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -38,6 +33,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/channels', channelRoutes);
+app.use('/api/youtube', youtubeRoutes);
+app.use('/api/assistant', assistantRoutes);
 
 /**
  * Health check endpoint
@@ -76,4 +73,3 @@ app.use((err, req, res, next) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`YouTube Clone Backend Server is running on http://localhost:${PORT}`);
 });
-

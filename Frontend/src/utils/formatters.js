@@ -2,14 +2,7 @@
  * Formatting utilities for numbers, relative timestamps, and media assets.
  */
 
-/**
- * Formats a raw view count number into YouTube-style abbreviated strings.
- * Examples:
- * - 450 -> '450 views'
- * - 1200 -> '1.2K views'
- * - 3500000 -> '3.5M views'
- * - 1500000000 -> '1.5B views'
- */
+/** Formats a view count as a compact YouTube-style string. */
 export function formatViews(views) {
   if (views === undefined || views === null) return '0 views';
   const num = Number(views);
@@ -111,4 +104,3 @@ export function getSafeBanner(url, index = 0) {
   }
   return url;
 }
-

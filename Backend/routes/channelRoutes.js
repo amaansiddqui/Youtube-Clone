@@ -99,12 +99,7 @@ router.get('/:id/videos', async (req, res) => {
   }
 });
 
-/**
- * POST /api/channels
- * Creates a new channel profile.
- * Supports authenticated users and request-provided owner/user credentials.
- * Associates the new channel ID with the user's profile in MongoDB and JSON DB.
- */
+/** POST /api/channels — creates a channel and associates it with its owner. */
 router.post('/', optionalAuth, async (req, res) => {
   const { channelId: providedId, channelName, description, channelBanner, avatarUrl, currentUser, owner } = req.body;
 
@@ -182,11 +177,7 @@ router.post('/', optionalAuth, async (req, res) => {
   }
 });
 
-/**
- * PUT /api/channels/:id
- * Updates channel details such as banner, avatar, description, or title.
- * Synchronizes updates across MongoDB Channel, MongoDB Video, and JSON DB.
- */
+/** PUT /api/channels/:id — updates channel details and branding. */
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
 

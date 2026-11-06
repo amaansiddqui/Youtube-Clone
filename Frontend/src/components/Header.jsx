@@ -1,13 +1,3 @@
-/**
- * Top Navigation Header
- * Features:
- * - Hamburger toggle for navigation sidebar
- * - YouTube logo brand link to home
- * - Search bar with submit & quick clear buttons
- * - Quick 'Create' button for publishing channels/videos
- * - User profile dropdown with channels & sign out
- */
-
 import { useState } from 'react';
 import { MenuIcon, YouTubeLogo, SearchIcon, MicIcon, CreateIcon, BellIcon, UserCircleIcon } from './Icons';
 
@@ -66,7 +56,7 @@ export default function Header({
         </button>
 
         <div className="yt-brand flex items-center cursor-pointer" title="YouTube Home" onClick={onNavigateHome}>
-          <YouTubeLogo countryCode="US" />
+          <YouTubeLogo countryCode="IN" />
         </div>
       </div>
 

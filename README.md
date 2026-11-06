@@ -24,7 +24,8 @@ This project is an educational full-stack application for practicing:
 - Video upload, editing, and deletion for channel owners
 - Recommended videos on the watch page
 - Mobile navigation drawer and responsive desktop sidebar
-- Automatic localStorage fallback when the backend is offline
+- YouTube Data API-powered discovery feed, search, categories, video details, and recommendations
+- Local persistence for account and creator features
 
 ## Technology Stack
 
@@ -84,9 +85,16 @@ cd ..\Frontend
 npm install
 ```
 
-### 3. Configure the Backend (Optional)
+### 3. Configure the Backend
 
-The backend works without MongoDB by using the JSON database fallback. To use MongoDB, set the connection string before starting the server:
+The YouTube discovery feed requires a YouTube Data API v3 key. Create `Backend/.env` from the example and add your key; the key stays on the backend and is never sent to the browser:
+
+```powershell
+cd Backend
+Copy-Item .env.example .env
+```
+
+Set `YOUTUBE_API_KEY` in `Backend/.env`. Do not commit this file. The backend can use its JSON database fallback without MongoDB. To use MongoDB, set the connection string before starting the server:
 
 ```powershell
 $env:MONGODB_URI = "mongodb://127.0.0.1:27017/youtube_clone"
@@ -138,6 +146,8 @@ The backend supports these environment variables:
 | Variable | Default | Purpose |
 | `PORT` | `5000` | Express server port |
 | `MONGODB_URI` | `mongodb://127.0.0.1:27017/youtube_clone` | MongoDB connection string |
+| `YOUTUBE_API_KEY` | — | YouTube Data API v3 key for live video feeds and search |
+| `OPENROUTER_API_KEY` | — | Optional key for the assistant chat |
 
 ## API Overview
 
@@ -158,7 +168,7 @@ The frontend API client uses `http://127.0.0.1:5000/api`.
 
 When MongoDB is connected, the backend reads and writes MongoDB collections. When it is unavailable, the backend uses `Backend/data/database.json` in memory and persists changes back to that file.
 
-The frontend also maintains a local cache in browser localStorage. This allows browsing and basic interactions to continue when the API is offline. Clear the site storage in browser developer tools to reset local cached videos, users, reactions, and subscriptions.
+Discovery feeds, category results, and searches use the YouTube Data API and do not fall back to seeded sample videos. If the API key is missing or the API is unavailable, the feed reports the error instead of showing dummy content. Account, channel-creation, and interaction features continue to use the app's local/backend persistence. Clear site storage in browser developer tools to reset local users, reactions, and subscriptions.
 
 ## Useful Commands
 
@@ -180,7 +190,7 @@ npm run preview
 
 **The frontend cannot reach the API**
 
-Confirm the backend is running on port 5000. The frontend will use localStorage fallback behavior, but server-backed synchronization will be unavailable.
+Confirm the backend is running on port 5000 and that `YOUTUBE_API_KEY` is set in `Backend/.env`. Feed and search requests require this key; MongoDB is not required for YouTube discovery.
 
 **MongoDB connection warnings appear**
 

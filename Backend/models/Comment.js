@@ -1,10 +1,5 @@
 import mongoose from 'mongoose';
 
-/**
- * Comment Schema definition for MongoDB.
- * Represents a comment posted on a video, tracking author details,
- * like counts, and edit status/timestamps.
- */
 const commentSchema = new mongoose.Schema(
   {
     commentId: { type: String, required: true, unique: true, index: true },
@@ -22,4 +17,3 @@ const commentSchema = new mongoose.Schema(
 
 const Comment = mongoose.model('Comment', commentSchema);
 export default Comment;
-

@@ -1,14 +1,3 @@
-/**
- * Unified API Client for YouTube Clone
- *
- * Implements a dual-mode strategy:
- * 1. Primary: Communicates with the Express/MongoDB REST backend on http://127.0.0.1:5000/api
- * 2. Fallback: If the backend is offline or network fails, automatically falls back
- *    to localStorage services (videoService, channelService, auth).
- *
- * This guarantees the application remains fully interactive in any development or offline environment.
- */
-
 import {
   getVideos as getLocalVideos,
   getVideoById as getLocalVideoById,
@@ -34,6 +23,74 @@ import {
 
 // Backend API Base URL
 const API_BASE = 'http://127.0.0.1:5000/api';
+
+// ----------------- YouTube Data API (via backend proxy) -----------------
+export const youtubeAPI = {
+  /**
+   * Fetches the real trending / home feed from YouTube (no region param =
+   * YouTube picks the region based on the request source, matching the user).
+   */
+  getFeed: async () => {
+    const data = await tryFetch('/youtube/videos?maxResults=40');
+    return data.videos || [];
+  },
+
+  /**
+   * Real YouTube search (server-side).
+   */
+  search: async (query, maxResults = 24, options = {}) => {
+    const params = new URLSearchParams({
+      q: query,
+      maxResults: String(maxResults)
+    });
+    if (options.order) params.set('order', options.order);
+    if (options.eventType) params.set('eventType', options.eventType);
+    const data = await tryFetch(`/youtube/search?${params.toString()}`);
+    return data.videos || [];
+  },
+
+  /**
+   * Fetches a single real YouTube video with its real comments.
+   */
+  getVideo: async (id) => {
+    const data = await tryFetch(`/youtube/videos/${id}`);
+    return data.video || null;
+  },
+
+  /**
+   * Fetches a real YouTube channel.
+   */
+  getChannel: async (id) => {
+    const data = await tryFetch(`/youtube/channels/${id}`);
+    return data.channel || null;
+  },
+
+  /**
+   * Fetches a real channel's uploads.
+   */
+  getChannelVideos: async (id) => {
+    const data = await tryFetch(`/youtube/channels/${id}/videos`);
+    return data.videos || [];
+  },
+
+  /**
+   * Fetches a real category feed (Music, Gaming, Sports...).
+   */
+  getCategory: async (categoryId) => {
+    const data = await tryFetch(`/youtube/category/${categoryId}`);
+    return data.videos || [];
+  }
+};
+
+export const assistantAPI = {
+  sendMessage: async (messages) => {
+    const data = await tryFetch('/assistant/chat', {
+      method: 'POST',
+      body: JSON.stringify({ messages })
+    });
+    return data;
+  }
+};
 
 /**
  * Reads the active JWT auth token from localStorage and returns
@@ -470,4 +527,3 @@ export const channelAPI = {
     return getLocalChannelSubscription(id);
   }
 };
-

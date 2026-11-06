@@ -36,11 +36,7 @@ export function safeVerifyToken(token) {
   }
 }
 
-/**
- * Middleware: Requires a valid JWT in the Authorization header (Bearer <token>).
- * If valid, attaches the decoded user payload to `req.user`.
- * If missing or invalid, blocks the request with a 401 Unauthorized status.
- */
+/** Requires a valid JWT and sets `req.user`. */
 export function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
 
@@ -62,11 +58,7 @@ export function authenticate(req, res, next) {
   return res.status(401).json({ message: 'Invalid authentication token.' });
 }
 
-/**
- * Middleware: Optional authentication.
- * Checks for a Bearer token; if present and valid, attaches `req.user`.
- * If missing or invalid, it still allows the request to continue as a guest user.
- */
+/** Sets `req.user` when authenticated; otherwise continues as a guest. */
 export function optionalAuth(req, res, next) {
   const authHeader = req.headers.authorization;
 

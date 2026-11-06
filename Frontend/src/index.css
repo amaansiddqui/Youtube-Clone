@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --yt-bg: #0f0f0f;
-  --yt-surface: #181818;
-  --yt-surface-hover: rgba(255, 255, 255, 0.1);
+  --yt-bg: #0b0d12;
+  --yt-surface: #141821;
+  --yt-surface-hover: rgba(255, 255, 255, 0.09);
   --yt-text-primary: #f1f1f1;
-  --yt-text-secondary: #aaaaaa;
-  --yt-text-muted: #717171;
-  --yt-border: rgba(255, 255, 255, 0.1);
-  --yt-border-search: #303030;
-  --yt-pill-bg: rgba(255, 255, 255, 0.08);
-  --yt-pill-hover: rgba(255, 255, 255, 0.15);
+  --yt-text-secondary: #a3aab8;
+  --yt-text-muted: #747d8e;
+  --yt-border: rgba(255, 255, 255, 0.08);
+  --yt-border-search: rgba(255, 255, 255, 0.13);
+  --yt-pill-bg: rgba(255, 255, 255, 0.07);
+  --yt-pill-hover: rgba(255, 255, 255, 0.13);
   --yt-pill-active-bg: #f1f1f1;
-  --yt-pill-active-text: #0f0f0f;
-  --yt-red: #ff0000;
+  --yt-pill-active-text: #10131b;
+  --yt-red: #ff385b;
   --yt-header-height: 56px;
   --yt-sidebar-width: 240px;
   --yt-sidebar-mini-width: 72px;

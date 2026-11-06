@@ -1,9 +1,3 @@
-/**
- * Edit Video Modal
- * Allows channel owners to modify an existing video's title, description,
- * topic category, and custom thumbnail image.
- */
-
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { updateVideo } from '../utils/videoService';

@@ -1,10 +1,5 @@
 import mongoose from 'mongoose';
 
-/**
- * Video Schema definition for MongoDB.
- * Captures video metadata, file format specs, engagement statistics,
- * and embedded comment threads for rapid single-query retrieval.
- */
 const videoSchema = new mongoose.Schema(
   {
     videoId: { type: String, required: true, unique: true, index: true },
@@ -49,4 +44,3 @@ const videoSchema = new mongoose.Schema(
 
 const Video = mongoose.model('Video', videoSchema);
 export default Video;
-

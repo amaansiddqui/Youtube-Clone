@@ -1,11 +1,3 @@
-/**
- * Customize Channel Modal
- * Allows creators to edit their channel branding:
- * - Update channel title & description
- * - Pick from curated banner presets or enter custom image URL
- * - Update creator avatar URL
- */
-
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { updateChannel } from '../utils/channelService';

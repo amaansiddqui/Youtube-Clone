@@ -1,10 +1,5 @@
 import mongoose from 'mongoose';
 
-/**
- * Channel Schema definition for MongoDB.
- * Manages creator profiles, visual branding (banner & avatar),
- * subscriber counts, and an array of published video IDs.
- */
 const channelSchema = new mongoose.Schema(
   {
     channelId: { type: String, required: true, unique: true, index: true },
@@ -21,4 +16,3 @@ const channelSchema = new mongoose.Schema(
 
 const Channel = mongoose.model('Channel', channelSchema);
 export default Channel;
-

@@ -1,14 +1,7 @@
-/**
- * Main Application Component (YouTube Clone)
- * - Client-side history-based routing (/watch?v=..., /channel?id=..., /login, /)
- * - Redux state hydration & background event listeners for real-time updates
- * - View switching between Home feed, Video watch view, Channel profile, and Auth page
- * - Global Header, collapsible Sidebar, and floating modals
- */
-
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Header from './components/Header';
+import Chatbot from './components/Chatbot';
 
 import Sidebar from './components/Sidebar';
 import FilterBar from './components/FilterBar';
@@ -23,9 +16,17 @@ import {
   selectFilteredVideos,
   selectSelectedCategory,
   selectSearchQuery,
+  selectSearchResults,
   setSelectedCategory,
   setSearchQuery,
-  fetchVideosThunk
+  fetchVideosThunk,
+  youtubeSearchThunk,
+  fetchTabFeedThunk,
+  selectActiveFeedTab,
+  selectTabVideos,
+  selectTabLoading,
+  selectVideosLoading,
+  selectVideoError
 } from './store/slices/videoSlice';
 import {
   selectUserPrimaryChannel,
@@ -45,6 +46,7 @@ import {
 } from './store/slices/uiSlice';
 
 import './App.css';
+import { recordWatch } from './utils/activityService';
 
 // Helper to extract video ID from pathname or search params
 function extractVideoId(path, search) {
@@ -83,7 +85,13 @@ export default function App() {
   const isCreateChannelModalOpen = useSelector(selectIsCreateChannelModalOpen);
   const selectedCategory = useSelector(selectSelectedCategory);
   const searchQuery = useSelector(selectSearchQuery);
+  const searchResults = useSelector(selectSearchResults);
   const filteredVideos = useSelector(selectFilteredVideos);
+  const activeFeedTab = useSelector(selectActiveFeedTab);
+  const tabVideos = useSelector(selectTabVideos);
+  const tabLoading = useSelector(selectTabLoading);
+  const videosLoading = useSelector(selectVideosLoading);
+  const videoError = useSelector(selectVideoError);
   const userPrimaryChannel = useSelector(selectUserPrimaryChannel(currentUser?.userId));
 
   // Local routing state
@@ -119,6 +127,18 @@ export default function App() {
       window.removeEventListener('yt-channel-updated', handleChannelDatabaseUpdate);
     };
   }, [dispatch]);
+
+  // Determine current active route (declared before effects that use it)
+  const isAuthRoute = currentPath === '/signin' || currentPath === '/login' || currentPath === '/register';
+  const watchVideoId = extractVideoId(currentPath, currentSearch);
+  const isWatchRoute = Boolean(watchVideoId);
+  const channelId = extractChannelId(currentPath, currentSearch);
+  const isChannelRoute = Boolean(channelId);
+
+  // Record watch history whenever a video is opened
+  useEffect(() => {
+    if (watchVideoId) recordWatch(watchVideoId);
+  }, [watchVideoId]);
 
   // Navigation helpers
   const navigateTo = (path) => {
@@ -186,6 +206,9 @@ export default function App() {
 
   const handleSearchSubmit = (query) => {
     dispatch(setSearchQuery(query));
+    if (query && query.trim()) {
+      dispatch(youtubeSearchThunk(query.trim()));
+    }
     if (isWatchRoute || isAuthRoute || isChannelRoute) {
       navigateTo('/');
     }
@@ -193,19 +216,46 @@ export default function App() {
 
   const handleSelectCategory = (category) => {
     dispatch(setSelectedCategory(category));
+    dispatch(setActiveTab('Home'));
+    dispatch(fetchTabFeedThunk(category === 'All' ? 'Home' : category));
   };
 
   const handleResetFilters = () => {
     dispatch(setSelectedCategory('All'));
     dispatch(setSearchQuery(''));
+    dispatch(setActiveTab('Home'));
+    dispatch(fetchTabFeedThunk('Home'));
   };
 
-  // Determine current active route
-  const isAuthRoute = currentPath === '/signin' || currentPath === '/login' || currentPath === '/register';
-  const watchVideoId = extractVideoId(currentPath, currentSearch);
-  const isWatchRoute = Boolean(watchVideoId);
-  const channelId = extractChannelId(currentPath, currentSearch);
-  const isChannelRoute = Boolean(channelId);
+  // Discovery feeds and search results come from the YouTube API; library tabs
+  // only select from videos already fetched from YouTube.
+  const displayVideos = searchQuery && searchQuery.trim()
+    ? searchResults
+    : activeFeedTab
+      ? (tabVideos || [])
+      : filteredVideos;
+  const isFeedLoading = searchQuery?.trim()
+    ? videosLoading
+    : activeFeedTab
+      ? tabLoading
+      : videosLoading;
+  const retryFeed = () => {
+    if (searchQuery?.trim()) {
+      dispatch(youtubeSearchThunk(searchQuery.trim()));
+    } else if (activeFeedTab) {
+      dispatch(fetchTabFeedThunk(activeFeedTab));
+    } else {
+      dispatch(fetchVideosThunk());
+    }
+  };
+  const featuredVideo = displayVideos?.[0];
+  const featuredLabel = searchQuery?.trim()
+    ? 'SEARCH PICK'
+    : activeFeedTab && activeFeedTab !== 'Home'
+      ? `${activeFeedTab.toUpperCase()} PICK`
+      : selectedCategory !== 'All'
+        ? `${selectedCategory.toUpperCase()} PICK`
+        : 'PICKED FOR YOU';
 
   return (
     <div
@@ -340,8 +390,47 @@ export default function App() {
             />
 
             <div className="yt-content-inner p-4 sm:p-6 flex-1">
+              {featuredVideo && (
+                <section className="yt-home-hero" key={featuredVideo.videoId} aria-label="Featured video">
+                  {featuredVideo.thumbnailUrl && (
+                    <img
+                      className="yt-home-hero-image"
+                      src={featuredVideo.thumbnailUrl}
+                      alt=""
+                      aria-hidden="true"
+                      onError={(event) => {
+                        event.currentTarget.style.visibility = 'hidden';
+                      }}
+                    />
+                  )}
+                  <div className="yt-home-hero-content">
+                    <span className="yt-home-hero-label">{featuredLabel}</span>
+                    <h2>{featuredVideo.title}</h2>
+                    <p>{featuredVideo.channelName || featuredVideo.uploader || 'Creator spotlight'}</p>
+                    <button
+                      type="button"
+                      className="yt-home-hero-button"
+                      onClick={() => handleSelectVideo(featuredVideo.videoId)}
+                    >
+                      <span aria-hidden="true">▶</span>
+                      Watch featured
+                    </button>
+                  </div>
+                  <span className="yt-home-hero-mark" aria-hidden="true">01</span>
+                </section>
+              )}
+              <h1 className="text-white text-xl font-bold mb-4">
+                {searchQuery && searchQuery.trim()
+                  ? `Search results for "${searchQuery}"`
+                  : activeFeedTab && activeFeedTab !== 'Home'
+                    ? activeFeedTab
+                    : ''}
+              </h1>
               <VideoGrid
-                videos={filteredVideos}
+                videos={displayVideos || []}
+                isLoading={isFeedLoading}
+                error={videoError}
+                onRetry={retryFeed}
                 onResetFilter={handleResetFilters}
                 onSelectVideo={handleSelectVideo}
                 onNavigateChannel={handleNavigateChannel}
@@ -361,6 +450,7 @@ export default function App() {
           handleNavigateChannel(newChannel.channelId);
         }}
       />
+      {!isAuthRoute && <Chatbot onSearch={handleSearchSubmit} />}
     </div>
   );
 }

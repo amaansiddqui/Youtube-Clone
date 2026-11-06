@@ -1,9 +1,3 @@
-/**
- * Create Channel Modal
- * Allows an authenticated creator to initialize their official YouTube channel
- * by specifying name, description, and banner artwork.
- */
-
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { createChannel } from '../utils/channelService';

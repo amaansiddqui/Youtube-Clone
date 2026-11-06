@@ -1,27 +1,17 @@
-/**
- * Category Filter Bar
- * Displays YouTube-style horizontal chips for topic filtering (All, React, JavaScript, etc.).
- * Supports smooth horizontal scroll buttons on larger screens.
- */
-
 import { useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectSelectedCategory, setSelectedCategory } from '../store/slices/videoSlice';
 
-// List of available video categories for selection
+// YouTube-aligned chips; those with real YouTube category feeds are fetched live
 const CATEGORIES = [
   'All',
-  'React',
-  'JavaScript',
-  'Web Development',
+  'Trending',
   'Music',
-  'Vite',
-  'CSS',
-  'Tools',
-  'Next.js',
-  'Computer programming',
-  'Podcasts',
+  'Gaming',
+  'Sports',
+  'News',
   'Live',
+  'Podcasts',
   'Recently uploaded',
   'New to you'
 ];

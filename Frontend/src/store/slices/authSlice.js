@@ -1,9 +1,3 @@
-/**
- * Redux Slice: Authentication
- * Manages user credentials, active session status, login/register thunks,
- * and profile state throughout the application.
- */
-
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authAPI } from '../../utils/api';
 
@@ -113,4 +107,3 @@ export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;
 
 export default authSlice.reducer;
-

@@ -1,12 +1,45 @@
-/**
- * Video Grid Component
- * Renders the responsive CSS grid layout of VideoCard components.
- * Displays a friendly empty state with a reset filter button when no videos match.
- */
-
 import VideoCard from './VideoCard';
 
-export default function VideoGrid({ videos, onResetFilter, onSelectVideo, onNavigateChannel }) {
+export default function VideoGrid({
+  videos,
+  isLoading = false,
+  error = null,
+  onRetry,
+  onResetFilter,
+  onSelectVideo,
+  onNavigateChannel
+}) {
+
+  if (isLoading) {
+    return (
+      <div className="yt-video-grid yt-video-grid-loading" role="status" aria-label="Loading YouTube videos">
+        {Array.from({ length: 8 }, (_, index) => (
+          <div className="yt-video-skeleton" key={index}>
+            <div className="yt-video-skeleton-thumbnail" />
+            <div className="yt-video-skeleton-details">
+              <span />
+              <span />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="yt-empty-grid flex flex-col items-center justify-center py-20 px-4 text-center" role="alert">
+        <div className="yt-empty-icon text-5xl mb-4">⚠️</div>
+        <h3 className="yt-empty-title text-xl font-medium mb-2 text-white">Could not load YouTube videos</h3>
+        <p className="yt-empty-text text-[#aaa] text-sm mb-5">{error}</p>
+        {onRetry && (
+          <button className="yt-empty-reset-btn cursor-pointer" onClick={onRetry}>
+            Try again
+          </button>
+        )}
+      </div>
+    );
+  }
 
   if (!videos || videos.length === 0) {
     return (
@@ -28,6 +61,7 @@ export default function VideoGrid({ videos, onResetFilter, onSelectVideo, onNavi
       {videos.map((video, idx) => (
         <VideoCard
           key={video.videoId || idx}
+          style={{ '--video-card-delay': `${Math.min(idx * 35, 280)}ms` }}
           video={video}
           index={idx}
           onSelectVideo={onSelectVideo}

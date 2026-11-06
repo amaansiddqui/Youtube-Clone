@@ -15,12 +15,7 @@ function isMongoConnected() {
   return mongoose.connection.readyState === 1;
 }
 
-/**
- * Validates user password.
- * In production with real hashing, this would call bcrypt.compare().
- * For this demo clone, we compare direct strings, with a friendly fallback
- * for the demo seed account (John Doe).
- */
+/** Validates passwords for the demo account flow. */
 function verifyPassword(storedPassword, providedPassword, userEmail) {
   if (storedPassword === providedPassword) {
     return true;
@@ -63,11 +58,7 @@ function formatUserResponse(user) {
   };
 }
 
-/**
- * POST /api/auth/register
- * Creates a new user profile, stores it in MongoDB or JSON fallback,
- * and returns an authentication token.
- */
+/** POST /api/auth/register — creates a user and returns a JWT. */
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -246,4 +237,3 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 export default router;
-

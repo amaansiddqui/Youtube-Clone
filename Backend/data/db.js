@@ -20,11 +20,7 @@ let database = {
   subscriptions: {}
 };
 
-/**
- * Initializes the JSON database.
- * If database.json exists and is valid, loads its contents into memory.
- * Otherwise seeds it with initial seedData and writes the file.
- */
+/** Loads or initializes the JSON database. */
 export function initDB() {
   try {
     if (fs.existsSync(DB_FILE)) {
@@ -43,9 +39,7 @@ export function initDB() {
   }
 }
 
-/**
- * Persists the current in-memory database state back to database.json on disk.
- */
+/** Persists the in-memory database to disk. */
 export function saveDB() {
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(database, null, 2), 'utf8');
@@ -54,10 +48,7 @@ export function saveDB() {
   }
 }
 
-/**
- * Returns a reference to the active database object.
- */
+/** Returns the active database object. */
 export function getDB() {
   return database;
 }
-

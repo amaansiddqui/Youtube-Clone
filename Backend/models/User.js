@@ -1,10 +1,5 @@
 import mongoose from 'mongoose';
 
-/**
- * User Schema definition for MongoDB.
- * Represents registered users, their credentials, avatar image,
- * and list of owned channel IDs.
- */
 const userSchema = new mongoose.Schema(
   {
     userId: { type: String, required: true, unique: true, index: true },
@@ -21,4 +16,3 @@ const userSchema = new mongoose.Schema(
 
 const User = mongoose.model('User', userSchema);
 export default User;
-

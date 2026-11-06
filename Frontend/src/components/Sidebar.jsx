@@ -1,11 +1,10 @@
-/**
- * Main Navigation Sidebar
- * Renders in two states:
- * 1. Compact Mini-Sidebar (72px): When drawer is toggled closed, showing essential icons & labels
- * 2. Full Expanded Sidebar (240px): Full drawer with primary, library, and explore sections
- */
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  selectActiveTab,
+  setActiveTab
+} from '../store/slices/uiSlice';
+import { fetchTabFeedThunk } from '../store/slices/videoSlice';
 import {
   HomeIcon,
   ShortsIcon,
@@ -17,9 +16,27 @@ import {
   TrendingIcon,
   MusicIcon,
   GamingIcon,
+  SportsIcon,
+  NewsIcon,
   SettingsIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  LikeFillIcon
 } from './Icons';
+
+export const SIDEBAR_TABS = {
+  Home:        { icon: HomeIcon,         feed: 'trending' },
+  Shorts:      { icon: ShortsIcon,       feed: 'shorts' },
+  Subscriptions: { icon: SubscriptionsIcon, feed: 'subscriptions' },
+  History:     { icon: HistoryIcon,      feed: 'history' },
+  Playlists:   { icon: PlaylistsIcon,    feed: 'playlists' },
+  'Watch Later': { icon: WatchLaterIcon, feed: 'watchlater' },
+  'Liked videos': { icon: LikedIcon,     feed: 'liked' },
+  Trending:    { icon: TrendingIcon,     feed: 'trending' },
+  Music:       { icon: MusicIcon,        feed: 'category', categoryId: '10' },
+  Gaming:      { icon: GamingIcon,       feed: 'category', categoryId: '20' },
+  Sports:      { icon: SportsIcon,       feed: 'category', categoryId: '17' },
+  News:        { icon: NewsIcon,         feed: 'category', categoryId: '25' }
+};
 
 export default function Sidebar({
   isOpen,
@@ -30,13 +47,28 @@ export default function Sidebar({
   onOpenCreateChannel
 }) {
   const [currentTab, setCurrentTab] = useState(activeTab);
+  const reduxActiveTab = useSelector(selectActiveTab);
+  const dispatch = useDispatch();
+
+  // Keep local highlight in sync with Redux
+  useEffect(() => {
+    setCurrentTab(reduxActiveTab);
+  }, [reduxActiveTab]);
 
   const handleItemClick = (title) => {
     setCurrentTab(title);
+    dispatch(setActiveTab(title));
+    // Load the real YouTube feed for content tabs
+    if (['Home', 'Shorts', 'Trending', 'Music', 'Gaming', 'Sports', 'News', 'Subscriptions'].includes(title)) {
+      dispatch(fetchTabFeedThunk(title));
+    }
     if (onSelectTab) {
       onSelectTab(title);
     }
   };
+  const settingsItems = [
+    { title: 'Settings', icon: SettingsIcon }
+  ];
 
 
   const primaryItems = [
@@ -55,7 +87,9 @@ export default function Sidebar({
   const exploreItems = [
     { title: 'Trending', icon: TrendingIcon },
     { title: 'Music', icon: MusicIcon },
-    { title: 'Gaming', icon: GamingIcon }
+    { title: 'Gaming', icon: GamingIcon },
+    { title: 'Sports', icon: SportsIcon },
+    { title: 'News', icon: NewsIcon }
   ];
 
   // When isOpen is false on desktop, render the compact mini-sidebar (icon + small text)
@@ -81,13 +115,43 @@ export default function Sidebar({
         })}
         <button
           className={`yt-sidebar-mini-item flex flex-col items-center justify-center w-16 h-18 rounded-xl transition-colors cursor-pointer gap-1.5 ${
-            currentTab === 'You' ? 'bg-white/15 text-white font-medium' : 'text-white hover:bg-white/10'
+            ['History','Playlists','Watch Later','Liked videos','You'].includes(currentTab) ? 'bg-white/15 text-white font-medium' : 'text-white hover:bg-white/10'
           }`}
-          onClick={() => handleItemClick('You')}
-          title="You"
+          onClick={() => handleItemClick('History')}
+          title="You > History"
         >
-          <HistoryIcon size={22} />
+          <UserCircleIcon size={22} />
           <span className="yt-mini-label text-[10px] text-center truncate max-w-[60px]">You</span>
+        </button>
+        <button
+          className={`yt-sidebar-mini-item flex flex-col items-center justify-center w-16 h-18 rounded-xl transition-colors cursor-pointer gap-1.5 ${
+            currentTab === 'Trending' ? 'bg-white/15 text-white font-medium' : 'text-white hover:bg-white/10'
+          }`}
+          onClick={() => handleItemClick('Trending')}
+          title="Trending"
+        >
+          <TrendingIcon size={22} />
+          <span className="yt-mini-label text-[10px] text-center truncate max-w-[60px]">Trending</span>
+        </button>
+        <button
+          className={`yt-sidebar-mini-item flex flex-col items-center justify-center w-16 h-18 rounded-xl transition-colors cursor-pointer gap-1.5 ${
+            currentTab === 'Music' ? 'bg-white/15 text-white font-medium' : 'text-white hover:bg-white/10'
+          }`}
+          onClick={() => handleItemClick('Music')}
+          title="Music"
+        >
+          <MusicIcon size={22} />
+          <span className="yt-mini-label text-[10px] text-center truncate max-w-[60px]">Music</span>
+        </button>
+        <button
+          className={`yt-sidebar-mini-item flex flex-col items-center justify-center w-16 h-18 rounded-xl transition-colors cursor-pointer gap-1.5 ${
+            currentTab === 'Gaming' ? 'bg-white/15 text-white font-medium' : 'text-white hover:bg-white/10'
+          }`}
+          onClick={() => handleItemClick('Gaming')}
+          title="Gaming"
+        >
+          <GamingIcon size={22} />
+          <span className="yt-mini-label text-[10px] text-center truncate max-w-[60px]">Gaming</span>
         </button>
       </aside>
     );

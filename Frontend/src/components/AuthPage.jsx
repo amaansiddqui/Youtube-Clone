@@ -1,12 +1,3 @@
-/**
- * Google-Themed Authentication Page
- * Supports:
- * - Switching between 'Sign in' and 'Create a Google Account'
- * - Email or Username login credentials
- * - One-click demo user autofill ('Use Demo Account')
- * - Form validation and clear inline error alerts
- */
-
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { GoogleGIcon } from './Icons';

@@ -1,19 +1,105 @@
-/**
- * Redux Slice: Videos
- * Manages the global video feed, active category filter, search query filter,
- * selected video details, and async thunks for video & comment operations.
- */
-
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import { videoAPI } from '../../utils/api';
-import { getVideos } from '../../utils/videoService';
+import { videoAPI, youtubeAPI } from '../../utils/api';
+
+// One-time cleanup: remove legacy sample/seed videos from localStorage
+(function purgeSampleVideos() {
+  try {
+    const raw = localStorage.getItem('yt_videos_database_v2');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return;
+    // Keep only real user uploads (video_ prefix); drop video01/02/03 seed entries
+    const uploadsOnly = parsed.filter((v) => v.videoId && String(v.videoId).startsWith('video_'));
+    if (uploadsOnly.length !== parsed.length) {
+      localStorage.setItem('yt_videos_database_v2', JSON.stringify(uploadsOnly));
+    }
+  } catch {
+    // Ignore storage errors
+  }
+})();
+
+// YouTube category chips -> real YouTube videoCategoryId values
+const YOUTUBE_CATEGORY_IDS = {
+  Music: '10',
+  Gaming: '20',
+  Sports: '17',
+  News: '25',
+  Movies: '1',
+  Technology: '28'
+};
 
 // Async thunks for video feed and video details
 export const fetchVideosThunk = createAsyncThunk(
   'videos/fetchVideos',
   async (_, { rejectWithValue }) => {
     try {
-      return await videoAPI.getVideos();
+      return await youtubeAPI.getFeed();
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+// Real YouTube search thunk
+export const youtubeSearchThunk = createAsyncThunk(
+  'videos/youtubeSearch',
+  async (query, { rejectWithValue }) => {
+    try {
+      return await youtubeAPI.search(query);
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+// Tab feed loader: dispatches the right real-data fetch for each sidebar tab
+export const fetchTabFeedThunk = createAsyncThunk(
+  'videos/fetchTabFeed',
+  async (tab, { rejectWithValue }) => {
+    try {
+      switch (tab) {
+        case 'Shorts':
+          return await youtubeAPI.search('#shorts', 48);
+        case 'Trending':
+        case 'Home':
+          return await youtubeAPI.getFeed();
+        case 'Music':
+          return await youtubeAPI.getCategory('10');
+        case 'Gaming':
+          return await youtubeAPI.getCategory('20');
+        case 'Sports':
+          return await youtubeAPI.getCategory('17');
+        case 'News':
+          return await youtubeAPI.getCategory('25');
+        case 'Movies':
+          return await youtubeAPI.getCategory('1');
+        case 'Technology':
+          return await youtubeAPI.getCategory('28');
+        case 'Live':
+          return await youtubeAPI.search('live', 24, { eventType: 'live' });
+        case 'Podcasts':
+          return await youtubeAPI.search('podcast', 24);
+        case 'Recently uploaded':
+          return await youtubeAPI.search('videos', 24, { order: 'date' });
+        case 'New to you':
+          return await youtubeAPI.search('new videos', 24, { order: 'date' });
+        default:
+          return null; // Library tabs are computed from local state instead
+      }
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+// Real YouTube category feed thunk
+export const youtubeCategoryThunk = createAsyncThunk(
+  'videos/youtubeCategory',
+  async (category, { rejectWithValue }) => {
+    try {
+      const categoryId = YOUTUBE_CATEGORY_IDS[category];
+      if (!categoryId) return [];
+      return await youtubeAPI.getCategory(categoryId);
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -130,10 +216,15 @@ export const deleteCommentThunk = createAsyncThunk(
 );
 
 const initialState = {
-  videos: getVideos(),
+  videos: [],
   currentVideo: null,
   selectedCategory: 'All',
   searchQuery: '',
+  searchResults: [],
+  isSearchMode: false,
+  activeFeedTab: null,
+  tabFeed: [],
+  tabLoading: false,
   loading: false,
   error: null
 };
@@ -150,6 +241,11 @@ export const videoSlice = createSlice({
     },
     setSearchQuery: (state, action) => {
       state.searchQuery = action.payload;
+      // Clearing the query exits search results mode
+      if (!action.payload || !action.payload.trim()) {
+        state.isSearchMode = false;
+        state.searchResults = [];
+      }
     },
     setCurrentVideo: (state, action) => {
       state.currentVideo = action.payload;
@@ -160,6 +256,7 @@ export const videoSlice = createSlice({
       // fetchVideos
       .addCase(fetchVideosThunk.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchVideosThunk.fulfilled, (state, action) => {
         state.loading = false;
@@ -167,6 +264,54 @@ export const videoSlice = createSlice({
       })
       .addCase(fetchVideosThunk.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+      // youtubeSearch
+      .addCase(youtubeSearchThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.searchResults = [];
+      })
+      .addCase(youtubeSearchThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isSearchMode = true;
+        state.searchResults = action.payload;
+      })
+      .addCase(youtubeSearchThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // youtubeCategory
+      .addCase(youtubeCategoryThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(youtubeCategoryThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        if (Array.isArray(action.payload) && action.payload.length > 0) {
+          state.videos = action.payload;
+        }
+      })
+      .addCase(youtubeCategoryThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // fetchTabFeed (sidebar tabs)
+      .addCase(fetchTabFeedThunk.pending, (state, action) => {
+        state.tabLoading = true;
+        state.error = null;
+        state.activeFeedTab = action.meta.arg;
+        state.tabFeed = [];
+      })
+      .addCase(fetchTabFeedThunk.fulfilled, (state, action) => {
+        state.tabLoading = false;
+        if (Array.isArray(action.payload)) {
+          state.tabFeed = action.payload;
+        }
+        // Library tabs (History/Liked/Watch Later/Playlists/Subscriptions) resolve locally
+      })
+      .addCase(fetchTabFeedThunk.rejected, (state, action) => {
+        state.tabLoading = false;
         state.error = action.payload;
       })
       // fetchVideoById
@@ -272,22 +417,71 @@ export const selectCurrentVideo = (state) => state.videos.currentVideo;
 export const selectSelectedCategory = (state) => state.videos.selectedCategory;
 export const selectSearchQuery = (state) => state.videos.searchQuery;
 export const selectVideosLoading = (state) => state.videos.loading;
+export const selectVideoError = (state) => state.videos.error;
+export const selectIsSearchMode = (state) => state.videos.isSearchMode;
+export const selectSearchResults = (state) => state.videos.searchResults;
+export const selectActiveFeedTab = (state) => state.videos.activeFeedTab;
+export const selectTabFeed = (state) => state.videos.tabFeed;
+export const selectTabLoading = (state) => state.videos.tabLoading;
+
+export const selectTabVideos = createSelector(
+  [selectActiveFeedTab, selectAllVideos, selectTabFeed, (state) => state.videos.tabLoading],
+  (tab, allVideos, remoteFeed, tabLoading) => {
+    if (!tab) return null;
+
+    // Library tabs read from the user's local activity
+    try {
+      if (tab === 'History') {
+        const raw = localStorage.getItem('yt_watch_history');
+        const ids = raw ? JSON.parse(raw) : [];
+        return ids.map((id) => allVideos.find((v) => v.videoId === id)).filter(Boolean);
+      }
+      if (tab === 'Liked videos') {
+        const raw = localStorage.getItem('yt_user_video_interactions');
+        const map = raw ? JSON.parse(raw) : {};
+        const likedIds = Object.entries(map)
+          .filter(([, status]) => status === 'like')
+          .map(([key]) => key.split('_').slice(1).join('_'));
+        // YouTube IDs may contain underscores; match by suffix against stored videos
+        return allVideos.filter((v) =>
+          likedIds.some((k) => k === v.videoId || k.endsWith(v.videoId))
+        );
+      }
+      if (tab === 'Watch Later') {
+        const raw = localStorage.getItem('yt_watch_later');
+        const ids = raw ? JSON.parse(raw) : [];
+        return ids.map((id) => allVideos.find((v) => v.videoId === id)).filter(Boolean);
+      }
+      if (tab === 'Playlists') {
+        const raw = localStorage.getItem('yt_watch_later');
+        const ids = raw ? JSON.parse(raw) : [];
+        return ids.map((id) => allVideos.find((v) => v.videoId === id)).filter(Boolean);
+      }
+      if (tab === 'Subscriptions') {
+        const raw = localStorage.getItem('yt_channel_subscriptions');
+        const map = raw ? JSON.parse(raw) : {};
+        const subIds = Object.keys(map).filter((k) => map[k]);
+        return allVideos.filter((v) => subIds.includes(v.channelId));
+      }
+    } catch {
+      return [];
+    }
+
+    // Remote tabs use the fetched YouTube feed
+    return tabLoading ? null : remoteFeed;
+  }
+);
 
 export const selectFilteredVideos = createSelector(
-  [selectAllVideos, selectSelectedCategory, selectSearchQuery],
-  (videos, selectedCategory, searchQuery) => {
-  const q = searchQuery.trim().toLowerCase();
+  [selectAllVideos, selectSelectedCategory, selectSearchQuery, selectSearchResults, (state) => state.videos.isSearchMode],
+  (videos, selectedCategory, searchQuery, searchResults, isSearchMode) => {
+    // In search-results mode show the live YouTube search results
+    if (isSearchMode) return searchResults;
+
+  const q = '';
 
   return videos.filter((video) => {
-    const matchesSearch =
-      q === '' ||
-      video.title.toLowerCase().includes(q) ||
-      (video.channelName && video.channelName.toLowerCase().includes(q)) ||
-      (video.description && video.description.toLowerCase().includes(q));
-
-    if (!matchesSearch) return false;
     if (selectedCategory === 'All') return true;
-
     return video.category?.toLowerCase() === selectedCategory.toLowerCase();
   });
   }

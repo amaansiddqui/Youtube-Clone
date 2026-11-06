@@ -6,13 +6,9 @@ import Comment from '../models/Comment.js';
 import { initialUsers, initialChannels, initialVideos } from '../data/seedData.js';
 
 // Default MongoDB URI fallback for local development
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/youtube_clone';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://<sidiquemaan01>:<uBXPqfGuwuHUPxEd>@cluster0.a0vwpqv.mongodb.net/';
 
-/**
- * Establishes a connection to the MongoDB database.
- * If connection fails, it catches the error and logs a friendly notice,
- * allowing the application to continue running using the JSON database fallback.
- */
+/** Connects to MongoDB when available; JSON persistence remains the fallback. */
 export async function connectDB() {
   try {
     const conn = await mongoose.connect(MONGODB_URI);

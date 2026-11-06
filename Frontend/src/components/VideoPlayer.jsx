@@ -1,14 +1,3 @@
-/**
- * Custom HTML5 Video Player
- * Features:
- * - Play / Pause toggle with keyboard spacebar support
- * - Video seek bar with live scrub preview
- * - Volume slider and mute toggle
- * - Current time / total duration counter
- * - Fullscreen toggle with Fullscreen API
- * - Auto-hiding control overlays on inactivity
- */
-
 import { useState, useRef, useEffect } from 'react';
 import { PlayIcon, PauseIcon, VolumeIcon, VolumeMuteIcon, FullscreenIcon } from './Icons';
 import { getSafeThumbnail } from '../utils/formatters';

@@ -1,9 +1,3 @@
-/**
- * Redux Slice: UI State
- * Controls drawer/sidebar visibility (standard desktop mini-sidebar vs expanded),
- * watch page sidebar state, active navigation tabs, and modal visibility.
- */
-
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
