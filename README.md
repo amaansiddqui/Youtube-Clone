@@ -1,6 +1,6 @@
-# YouTube Clone
+## YouTube Clone
 
-A responsive YouTube-style video platform built with React, Redux Toolkit, Vite, and Express. The project includes a home feed, search and category filters, video playback, channel pages, authentication, comments, reactions, subscriptions, and creator video management.
+AI Intregrated responsive YouTube-style video platform built with React, Redux Toolkit, Vite, and Express. The project includes a home feed, search and category filters, video playback, channel pages, authentication, comments, reactions, subscriptions, and creator video management.
 
 ## Project Purpose
 
