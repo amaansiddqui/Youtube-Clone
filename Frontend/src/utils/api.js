@@ -22,7 +22,7 @@ import {
 } from './auth';
 
 // Backend API Base URL
-const API_BASE = 'http://127.0.0.1:5000/api';
+const API_BASE = 'https://youtube-clone-et0h.onrender.com/api';
 
 // ----------------- YouTube Data API (via backend proxy) -----------------
 export const youtubeAPI = {
