@@ -1,6 +1,7 @@
 /* App Layout */
 .yt-app {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: var(--yt-bg);
@@ -687,21 +688,23 @@
   .yt-sidebar-overlay {
     display: block;
     position: fixed;
-    top: 0;
+    top: var(--yt-header-height);
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    right: 0;
+    bottom: 0;
+    height: auto;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 150;
+    z-index: 90;
   }
 
   .yt-sidebar-expanded {
     position: fixed;
-    top: 0;
+    top: var(--yt-header-height);
     left: 0;
-    height: 100vh;
+    bottom: 0;
+    height: auto;
     width: min(var(--yt-sidebar-width), 85vw);
-    z-index: 200;
+    z-index: 110;
     box-shadow: 4px 0 16px rgba(0, 0, 0, 0.5);
   }
 
@@ -802,6 +805,75 @@
 
   .yt-watch-page {
     padding: 12px;
+  }
+
+  .yt-header-center {
+    flex: 1 1 0;
+  }
+
+  .yt-filter-scroll-btn {
+    display: none;
+  }
+
+  .yt-content-inner {
+    padding: 12px;
+  }
+
+  .yt-watch-page > div {
+    gap: 20px;
+  }
+
+  .yt-recommended-thumbnail {
+    width: min(42vw, 160px);
+  }
+
+  .yt-channel-meta-row {
+    column-gap: 5px;
+  }
+
+  .yt-home-hero-image {
+    object-position: 65% center;
+  }
+}
+
+@media (max-width: 380px) {
+  .yt-header {
+    gap: 4px;
+    padding: 0 6px;
+  }
+
+  .yt-header-left {
+    gap: 4px;
+  }
+
+  .yt-header-center {
+    margin: 0 2px;
+  }
+
+  .yt-header-right {
+    gap: 2px;
+  }
+
+  .yt-icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .yt-search-input-wrapper {
+    padding: 0 8px;
+  }
+
+  .yt-search-input {
+    font-size: 14px;
+  }
+
+  .yt-signin-btn {
+    padding: 0 8px;
+  }
+
+  .yt-channel-title {
+    font-size: 20px;
+    overflow-wrap: anywhere;
   }
 }
 

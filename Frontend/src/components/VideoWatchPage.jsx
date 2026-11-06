@@ -506,7 +506,7 @@ export default function VideoWatchPage({
                   className="flex gap-3 group cursor-pointer rounded-xl p-1.5 hover:bg-white/5 transition-colors"
                 >
                   {/* Thumbnail */}
-                  <div className="relative w-40 sm:w-44 aspect-video rounded-lg overflow-hidden bg-neutral-800 shrink-0">
+                  <div className="yt-recommended-thumbnail relative w-40 sm:w-44 aspect-video rounded-lg overflow-hidden bg-neutral-800 shrink-0">
                     <img
                       src={recThumb}
                       alt={recVideo.title}
