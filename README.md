@@ -12,6 +12,7 @@ This project is an educational full-stack application for practicing:
 - MongoDB persistence with a JSON database fallback
 - Client-side routing with the browser History API
 - Local-first development and offline-friendly behavior
+- AI Chatbot- Using LLM & OpenRouter API.
 
 ## Features
 
@@ -22,6 +23,7 @@ This project is an educational full-stack application for practicing:
 - Sign-in and registration flow with JWT support when the backend is available
 - Likes, dislikes, comments, comment editing, and comment deletion
 - Video upload, editing, and deletion for channel owners
+- Use AI Chatbot for useful suggestion to explore application.
 - Recommended videos on the watch page
 - Mobile navigation drawer and responsive desktop sidebar
 - YouTube Data API-powered discovery feed, search, categories, video details, and recommendations
