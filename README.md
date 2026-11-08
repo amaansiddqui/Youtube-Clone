@@ -98,7 +98,7 @@ Set `YOUTUBE_API_KEY` in `Backend/.env`. Do not commit this file. The backend ca
 
 ```powershell
 $env:MONGODB_URI = "mongodb://127.0.0.1:27017/youtube_clone"
-$env:PORT = "5000"
+$env:PORT = "5050"
 ```
 
 ### 4. Start the Development Servers
@@ -116,7 +116,7 @@ cd Backend
 npm run start
 ```
 
-The API runs at `http://127.0.0.1:5000`.
+The API runs at `http://127.0.0.1:5050`.
 
 **Terminal 2: Frontend**
 
@@ -131,10 +131,10 @@ Open the Vite URL in a browser to use the application.
 
 ### 5. Verify the Setup
 
-Check the backend health endpoint:
+Check that the backend is live:
 
 ```text
-http://127.0.0.1:5000/api/health
+http://127.0.0.1:5050/api/videos
 ```
 
 The endpoint should return a JSON response with `status: "ok"`. The frontend should then load the video feed and connect to the API.
@@ -144,17 +144,16 @@ The endpoint should return a JSON response with `status: "ok"`. The frontend sho
 The backend supports these environment variables:
 
 | Variable | Default | Purpose |
-| `PORT` | `5000` | Express server port |
+| `PORT` | `5050` | Express server port |
 | `MONGODB_URI` | `mongodb://127.0.0.1:27017/youtube_clone` | MongoDB connection string |
 | `YOUTUBE_API_KEY` | — | YouTube Data API v3 key for live video feeds and search |
-| `OPENROUTER_API_KEY` | — | Optional key for the assistant chat |
+
 
 ## API Overview
 
-The frontend API client uses `http://127.0.0.1:5000/api`.
+The frontend API client uses `http://127.0.0.1:5050/api`.
 
 | Method | Endpoint | Purpose |
-| `GET` | `/api/health` | Check backend availability |
 | `GET` | `/api/videos/video01?userId=user01` | List videos by ID |
 | `POST` | `/api/videos/video01/like` | Like Video |
 | `POST` | `/api/videos/video01/dislike` | Dislike Video |
@@ -190,7 +189,7 @@ npm run preview
 
 **The frontend cannot reach the API**
 
-Confirm the backend is running on port 5000 and that `YOUTUBE_API_KEY` is set in `Backend/.env`. Feed and search requests require this key; MongoDB is not required for YouTube discovery.
+Confirm the backend is running on port 5050 and that `YOUTUBE_API_KEY` is set in `Backend/.env`. Feed and search requests require this key; MongoDB is not required for YouTube discovery.
 
 **MongoDB connection warnings appear**
 

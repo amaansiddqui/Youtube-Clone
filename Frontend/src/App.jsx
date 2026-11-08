@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Header from './components/Header';
-import Chatbot from './components/Chatbot';
+
 
 import Sidebar from './components/Sidebar';
 import FilterBar from './components/FilterBar';
@@ -450,7 +450,7 @@ export default function App() {
           handleNavigateChannel(newChannel.channelId);
         }}
       />
-      {!isAuthRoute && <Chatbot onSearch={handleSearchSubmit} />}
+
     </div>
   );
 }

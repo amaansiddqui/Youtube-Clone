@@ -24,7 +24,7 @@ import {
 // Backend API Base URL
 // Uses the local backend during development, and the deployed Render backend in production.
 const API_BASE = import.meta.env.DEV
-  ? 'http://localhost:5000/api'
+  ? 'http://localhost:5050/api'
   : 'https://youtube-clone-et0h.onrender.com/api';
 
 // ----------------- YouTube Data API (via backend proxy) -----------------
@@ -85,15 +85,7 @@ export const youtubeAPI = {
   }
 };
 
-export const assistantAPI = {
-  sendMessage: async (messages) => {
-    const data = await tryFetch('/assistant/chat', {
-      method: 'POST',
-      body: JSON.stringify({ messages })
-    });
-    return data;
-  }
-};
+
 
 /**
  * Reads the active JWT auth token from localStorage and returns

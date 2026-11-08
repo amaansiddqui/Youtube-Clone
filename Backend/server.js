@@ -7,11 +7,10 @@ import authRoutes from './routes/authRoutes.js';
 import videoRoutes from './routes/videoRoutes.js';
 import channelRoutes from './routes/channelRoutes.js';
 import youtubeRoutes from './routes/youtubeRoutes.js';
-import assistantRoutes from './routes/assistantRoutes.js';
 
 // Initialize the Express application
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 
 // Setup persistence layers:
 // 1. JSON file/in-memory cache for fast local access and offline fallback
@@ -34,19 +33,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/youtube', youtubeRoutes);
-app.use('/api/assistant', assistantRoutes);
-
-/**
- * Health check endpoint
- * Useful for monitoring, uptime checks, and verifying that the backend is live.
- */
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'YouTube Clone API Backend is running smoothly',
-    timestamp: new Date().toISOString()
-  });
-});
 
 /**
  * 404 Handler for undefined API routes
