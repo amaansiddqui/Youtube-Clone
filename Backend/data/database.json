@@ -11,7 +11,8 @@
       ],
       "likedVideos": [
         "video01",
-        "video_1788770915130_bteq"
+        "video_1788770915130_bteq",
+        "video03"
       ],
       "dislikedVideos": []
     },
@@ -45,15 +46,16 @@
       "channelId": "channel01",
       "channelName": "Code with John",
       "owner": "user01",
-      "description": "Coding tutorials and tech reviews by John Doe.",
-      "channelBanner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
-      "avatarUrl": "https://static.vecteezy.com/system/resources/thumbnails/043/101/076/small_2x/ai-generated-teacher-standing-in-a-school-classroom-photo.jpeg",
+      "description": "Coding tutorials and tech reviews by John !!",
+      "channelBanner": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80",
+      "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
       "subscribers": 5200,
       "videos": [
         "video01",
         "video02"
       ],
-      "createdAt": "2024-01-15T00:00:00.000Z"
+      "createdAt": "2024-01-15T00:00:00.000Z",
+      "updatedAt": "2026-09-08T08:13:37.941Z"
     },
     {
       "channelId": "channel02",
@@ -94,9 +96,94 @@
       ],
       "createdAt": "2026-09-07T08:47:37.213Z",
       "updatedAt": "2026-09-07T09:44:11.415Z"
+    },
+    {
+      "channelId": "channel_1788853101218",
+      "channelName": "Code with Subh",
+      "owner": "user_1788853068996",
+      "description": "Welcome to Code with Subh! Official channel for videos, tutorials, and community updates.",
+      "channelBanner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
+      "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=shubham&backgroundColor=cc0000,0073e6,2ba640",
+      "subscribers": 0,
+      "videos": [],
+      "createdAt": "2026-09-08T07:38:21.435Z"
+    },
+    {
+      "channelId": "channel_1788853504124",
+      "channelName": "Code with ayush",
+      "owner": "user_1788853491076",
+      "description": "Welcome to Code with ayush! Official channel for videos, tutorials, and community updates.",
+      "channelBanner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
+      "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Ayush&backgroundColor=cc0000,0073e6,2ba640",
+      "subscribers": 0,
+      "videos": [
+        "video_1788856850749_t5qn",
+        "video_1788857133282_5niq"
+      ],
+      "createdAt": "2026-09-08T07:45:04.239Z"
+    },
+    {
+      "channelId": "channel_1788854875303",
+      "channelName": "Code with ayush",
+      "owner": "user_1788853491076",
+      "description": "Welcome to Code with ayush! Official channel for videos, tutorials, and community updates.",
+      "channelBanner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
+      "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Ayush&backgroundColor=cc0000,0073e6,2ba640",
+      "subscribers": 0,
+      "videos": [],
+      "createdAt": "2026-09-08T08:07:55.461Z"
     }
   ],
   "videos": [
+    {
+      "videoId": "video_1788857133282_5niq",
+      "title": "NEXT JS Course",
+      "description": "",
+      "category": "Next.js",
+      "thumbnailUrl": "https://media.geeksforgeeks.org/wp-content/cdn-uploads/20230202143636/NEXT-js-tutorial-1.png",
+      "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
+      "duration": "10:00",
+      "fileMetadata": {
+        "format": "mp4",
+        "size": 10485760,
+        "mimeType": "video/mp4",
+        "resolution": "1080p"
+      },
+      "channelId": "channel_1788853504124",
+      "channelName": "Code with ayush",
+      "uploader": "Code with ayush",
+      "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Ayush&backgroundColor=cc0000,0073e6,2ba640",
+      "views": 0,
+      "likes": 0,
+      "dislikes": 0,
+      "uploadDate": "2026-09-08T08:45:33.294Z",
+      "comments": []
+    },
+    {
+      "videoId": "video_1788856850749_t5qn",
+      "title": "JavaScript Tutorials",
+      "description": "",
+      "category": "JavaScript",
+      "thumbnailUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Javascript.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
+      "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
+      "duration": "10:00",
+      "fileMetadata": {
+        "format": "mp4",
+        "size": 10485760,
+        "mimeType": "video/mp4",
+        "resolution": "1080p"
+      },
+      "channelId": "channel_1788853504124",
+      "channelName": "Code with ayush",
+      "uploader": "Code with ayush",
+      "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Ayush&backgroundColor=cc0000,0073e6,2ba640",
+      "views": 0,
+      "likes": 0,
+      "dislikes": 0,
+      "uploadDate": "2026-09-08T08:40:50.760Z",
+      "comments": [],
+      "updatedAt": "2026-09-08T08:45:57.460Z"
+    },
     {
       "videoId": "video_1788770915130_bteq",
       "title": "Full Stack Course",
@@ -117,7 +204,7 @@
       "avatarUrl": "https://api.dicebear.com/7.x/initials/svg?seed=Amaan___&backgroundColor=cc0000,0073e6,2ba640",
       "views": 0,
       "likes": 2,
-      "dislikes": 0,
+      "dislikes": 2,
       "uploadDate": "2026-09-07T08:48:35.142Z",
       "comments": [
         {
@@ -142,11 +229,11 @@
       "description": "A quick tutorial to get started with React.",
       "channelId": "channel01",
       "channelName": "Code with John",
-      "uploader": "user01",
+      "uploader": "Code with John",
       "subscribers": "5.2K",
       "views": 15200,
       "likes": 1027,
-      "dislikes": 45,
+      "dislikes": 46,
       "uploadDate": "2024-09-20",
       "duration": "30:15",
       "category": "React",
@@ -205,7 +292,7 @@
       "uploader": "JS Wizards",
       "subscribers": "620K",
       "views": 342100,
-      "likes": 18450,
+      "likes": 18451,
       "dislikes": 320,
       "uploadDate": "2024-07-02",
       "duration": "18:04",
@@ -249,11 +336,19 @@
     "user_1788717733264_video02": "like",
     "user_1788717733264_video_1788770915130_bteq": "like",
     "user_1788717733264_video_1788773475936_6hsq": "like",
-    "user01_video_1788770915130_bteq": "like",
     "guest_p8uiayb_video01": "like",
     "guest_zlt0k5t_video01": "like",
     "user_1788717733264_video01": "like",
-    "user01_video01": "like"
+    "user01_video01": "like",
+    "user01_video_1788770915130_bteq": "like",
+    "user_1788853068996_video01": "dislike",
+    "user_1788853068996_video_1788770915130_bteq": "dislike",
+    "guest_zlt0k5t_video_1788770915130_bteq": "dislike",
+    "user01_video03": "like"
   },
-  "subscriptions": {}
+  "subscriptions": {
+    "channel01": true,
+    "channel_1788770857034": true,
+    "channel03": true
+  }
 }

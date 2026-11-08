@@ -11,7 +11,7 @@ import User from './models/User.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE = path.join(__dirname, 'data', 'database.json');
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/youtube_clone';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://sidiquemaan01:uBXPqfGuwuHUPxEd@cluster0.a0vwpqv.mongodb.net/'; 
 
 async function syncAllData() {
   console.log('=== Starting Full Database Synchronization ===\n');

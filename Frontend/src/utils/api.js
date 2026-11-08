@@ -22,7 +22,10 @@ import {
 } from './auth';
 
 // Backend API Base URL
-const API_BASE = 'https://youtube-clone-et0h.onrender.com/api';
+// Uses the local backend during development, and the deployed Render backend in production.
+const API_BASE = import.meta.env.DEV
+  ? 'http://localhost:5000/api'
+  : 'https://youtube-clone-et0h.onrender.com/api';
 
 // ----------------- YouTube Data API (via backend proxy) -----------------
 export const youtubeAPI = {
